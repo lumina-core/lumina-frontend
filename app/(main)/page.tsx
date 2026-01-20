@@ -10,7 +10,6 @@ export default function ChatPage() {
   const {
     messages,
     isStreaming,
-    currentToolCall,
     lastUsage,
     sendMessage,
   } = useChat();
@@ -23,7 +22,6 @@ export default function ChatPage() {
         <MessageList
           messages={messages}
           isStreaming={isStreaming}
-          currentToolCall={currentToolCall}
         />
       ) : (
         <WelcomeScreen onSelectPrompt={sendMessage} />

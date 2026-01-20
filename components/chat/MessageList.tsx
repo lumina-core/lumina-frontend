@@ -1,29 +1,54 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { MessageItem } from "./MessageItem";
-import { ToolCallCard } from "./ToolCallCard";
-import type { Message, ToolCall } from "@/types";
+import type { Message } from "@/types";
 
 interface MessageListProps {
   messages: Message[];
   isStreaming?: boolean;
-  currentToolCall?: ToolCall | null;
 }
 
 export function MessageList({
   messages,
   isStreaming,
-  currentToolCall,
 }: MessageListProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const userScrolledRef = useRef(false);
+  const lastMessageCountRef = useRef(messages.length);
+
+  const isNearBottom = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return true;
+    const threshold = 100;
+    return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    if (!isStreaming) return;
+    userScrolledRef.current = !isNearBottom();
+  }, [isStreaming, isNearBottom]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isStreaming, currentToolCall]);
+    // Reset user scroll flag when new message is added (user sends message)
+    if (messages.length > lastMessageCountRef.current) {
+      userScrolledRef.current = false;
+    }
+    lastMessageCountRef.current = messages.length;
+
+    // Only auto-scroll if user hasn't scrolled up
+    if (!userScrolledRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isStreaming]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6">
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="flex-1 overflow-y-auto px-4 py-6"
+    >
       <div className="max-w-3xl mx-auto">
         {messages.map((message, idx) => {
           const isLastAssistant =
@@ -37,18 +62,6 @@ export function MessageList({
             />
           );
         })}
-
-        {/* Current Tool Call (while streaming) */}
-        {currentToolCall && isStreaming && (
-          <div className="mb-6">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8" /> {/* Spacer */}
-              <div className="flex-1">
-                <ToolCallCard toolCall={currentToolCall} />
-              </div>
-            </div>
-          </div>
-        )}
 
         <div ref={bottomRef} />
       </div>

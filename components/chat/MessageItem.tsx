@@ -1,32 +1,88 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkSupersub from "remark-supersub";
+import rehypeRaw from "rehype-raw";
 import { Copy, Check, Sparkles } from "lucide-react";
 import { ToolCallCard } from "./ToolCallCard";
-import type { Message } from "@/types";
+import type { Message, AggregatedToolCall, MessagePart } from "@/types";
 
 interface MessageItemProps {
   message: Message;
   isStreaming?: boolean;
 }
 
+type AggregatedPart = MessagePart | { type: "aggregated_tool"; aggregated: AggregatedToolCall };
+
+function aggregateToolCalls(parts: MessagePart[]): AggregatedPart[] {
+  const result: AggregatedPart[] = [];
+  const toolGroups = new Map<string, { count: number; completedCount: number }>();
+  
+  parts.forEach((part) => {
+    if (part.type === "tool_call") {
+      const name = part.toolCall.name;
+      const existing = toolGroups.get(name);
+      if (existing) {
+        existing.count++;
+        if (part.toolCall.status === "completed") existing.completedCount++;
+      } else {
+        toolGroups.set(name, {
+          count: 1,
+          completedCount: part.toolCall.status === "completed" ? 1 : 0,
+        });
+      }
+    }
+  });
+
+  const processedTools = new Set<string>();
+  
+  parts.forEach((part) => {
+    if (part.type === "tool_call") {
+      const name = part.toolCall.name;
+      if (!processedTools.has(name)) {
+        processedTools.add(name);
+        const group = toolGroups.get(name)!;
+        const aggregated: AggregatedToolCall = {
+          name,
+          count: group.count,
+          completedCount: group.completedCount,
+          status: group.completedCount === group.count ? "completed" : "running",
+        };
+        result.push({ type: "aggregated_tool", aggregated });
+      }
+    } else {
+      result.push(part);
+    }
+  });
+
+  return result;
+}
+
 export function MessageItem({ message, isStreaming }: MessageItemProps) {
   const [copied, setCopied] = useState(false);
-  const { role, content, toolCalls } = message;
+  const { role, parts } = message;
+  const aggregatedParts = useMemo(() => aggregateToolCalls(parts), [parts]);
   const isUser = role === "user";
 
+  const fullTextContent = parts
+    .filter((p) => p.type === "text")
+    .map((p) => (p as { type: "text"; content: string }).content)
+    .join("");
+
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(content);
+    await navigator.clipboard.writeText(fullTextContent);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   if (isUser) {
+    const userContent = parts[0]?.type === "text" ? parts[0].content : "";
     return (
       <div className="flex justify-end mb-4">
         <div className="max-w-[70%] px-4 py-3 rounded-2xl bg-brand-primary text-white">
-          <p className="whitespace-pre-wrap">{content}</p>
+          <p className="whitespace-pre-wrap">{userContent}</p>
         </div>
       </div>
     );
@@ -40,15 +96,17 @@ export function MessageItem({ message, isStreaming }: MessageItemProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Tool Calls */}
-          {toolCalls?.map((tc, idx) => (
-            <ToolCallCard key={idx} toolCall={tc} />
-          ))}
-
-          {/* Content */}
-          {content && (
-            <div className="prose prose-invert prose-sm max-w-none">
+          {/* Render parts with aggregated tool calls */}
+          {aggregatedParts.map((part, idx) => {
+            if (part.type === "aggregated_tool") {
+              return <ToolCallCard key={`tool-${part.aggregated.name}`} aggregatedToolCall={part.aggregated} />;
+            }
+            if (part.type === "text" && part.content) {
+              return (
+                <div key={idx} className="prose prose-invert prose-sm max-w-none">
               <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkSupersub]}
+                rehypePlugins={[rehypeRaw]}
                 components={{
                   p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
                   ul: ({ children }) => <ul className="mb-3 list-disc pl-4">{children}</ul>,
@@ -88,18 +146,43 @@ export function MessageItem({ message, isStreaming }: MessageItemProps) {
                     </a>
                   ),
                   strong: ({ children }) => <strong className="font-semibold text-text-primary">{children}</strong>,
+                  del: ({ children }) => <del className="text-text-tertiary">{children}</del>,
+                  table: ({ children }) => (
+                    <div className="overflow-x-auto my-3">
+                      <table className="min-w-full border-collapse">{children}</table>
+                    </div>
+                  ),
+                  thead: ({ children }) => <thead className="bg-bg-tertiary">{children}</thead>,
+                  tbody: ({ children }) => <tbody>{children}</tbody>,
+                  tr: ({ children }) => <tr className="border-b border-border-primary">{children}</tr>,
+                  th: ({ children }) => (
+                    <th className="px-3 py-2 text-left font-semibold border border-border-primary">{children}</th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="px-3 py-2 border border-border-primary">{children}</td>
+                  ),
+                  sup: ({ children }) => <sup className="text-xs">{children}</sup>,
+                  sub: ({ children }) => <sub className="text-xs">{children}</sub>,
+                  input: ({ checked }) => (
+                    <input type="checkbox" checked={checked} readOnly className="mr-2 accent-brand-primary" />
+                  ),
                 }}
               >
-                {content}
+                {part.content}
               </ReactMarkdown>
-              {isStreaming && (
-                <span className="inline-block w-2 h-4 ml-0.5 bg-brand-primary animate-pulse" />
-              )}
-            </div>
+                </div>
+              );
+            }
+            return null;
+          })}
+
+          {/* Streaming cursor */}
+          {isStreaming && (
+            <span className="inline-block w-2 h-4 ml-0.5 bg-brand-primary animate-pulse" />
           )}
 
           {/* Actions */}
-          {content && !isStreaming && (
+          {fullTextContent && !isStreaming && (
             <div className="flex items-center gap-2 mt-3">
               <button
                 onClick={handleCopy}

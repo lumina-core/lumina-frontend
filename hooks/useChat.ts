@@ -4,17 +4,16 @@ import { useCallback } from "react";
 import { api } from "@/lib/api";
 import { useChatStore } from "@/stores/chatStore";
 import { useAuthStore } from "@/stores/authStore";
-import type { SSEEvent } from "@/types";
+import type { SSEEvent, Message } from "@/types";
 
 export function useChat() {
   const {
     messages,
     isStreaming,
-    currentToolCall,
     lastUsage,
     addMessage,
-    updateLastAssistantMessage,
-    setToolCall,
+    appendTextToLastAssistant,
+    addToolCallToLastAssistant,
     updateToolCallStatus,
     setIsStreaming,
     setLastUsage,
@@ -23,36 +22,41 @@ export function useChat() {
 
   const { updateCredits } = useAuthStore();
 
+  const getHistoryContent = (msgs: Message[]) => {
+    return msgs.map((m) => {
+      const textContent = m.parts
+        .filter((p) => p.type === "text")
+        .map((p) => (p as { type: "text"; content: string }).content)
+        .join("");
+      return { role: m.role, content: textContent };
+    });
+  };
+
   const sendMessage = useCallback(
     async (query: string) => {
       if (isStreaming || !query.trim()) return;
 
       // Add user message
-      addMessage({ role: "user", content: query });
+      addMessage({ role: "user", parts: [{ type: "text", content: query }] });
 
       // Add empty assistant message
-      addMessage({ role: "assistant", content: "" });
+      addMessage({ role: "assistant", parts: [] });
 
       setIsStreaming(true);
-      let assistantContent = "";
 
       try {
-        const history = messages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        }));
+        const history = getHistoryContent(messages);
 
         for await (const event of api.chatStream(query, history)) {
           const e = event as SSEEvent;
 
           switch (e.type) {
             case "token":
-              assistantContent += e.content || "";
-              updateLastAssistantMessage(assistantContent);
+              appendTextToLastAssistant(e.content || "");
               break;
 
             case "tool_start":
-              setToolCall({
+              addToolCallToLastAssistant({
                 name: e.name || "",
                 input: e.input || {},
                 status: "running",
@@ -60,7 +64,7 @@ export function useChat() {
               break;
 
             case "tool_end":
-              updateToolCallStatus("completed", e.output);
+              updateToolCallStatus(e.name || "", "completed", e.output);
               break;
 
             case "usage":
@@ -82,18 +86,17 @@ export function useChat() {
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "发送失败";
-        updateLastAssistantMessage(`抱歉，发生了错误：${errorMessage}`);
+        appendTextToLastAssistant(`抱歉，发生了错误：${errorMessage}`);
       } finally {
         setIsStreaming(false);
-        setToolCall(null);
       }
     },
     [
       messages,
       isStreaming,
       addMessage,
-      updateLastAssistantMessage,
-      setToolCall,
+      appendTextToLastAssistant,
+      addToolCallToLastAssistant,
       updateToolCallStatus,
       setIsStreaming,
       setLastUsage,
@@ -104,7 +107,6 @@ export function useChat() {
   return {
     messages,
     isStreaming,
-    currentToolCall,
     lastUsage,
     sendMessage,
     clearMessages,

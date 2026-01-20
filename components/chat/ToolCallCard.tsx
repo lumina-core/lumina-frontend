@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Search, ChevronDown, ChevronUp, Check, Loader2 } from "lucide-react";
+import { Search, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ToolCall } from "@/types";
+import type { AggregatedToolCall } from "@/types";
 
 interface ToolCallCardProps {
-  toolCall: ToolCall;
+  aggregatedToolCall: AggregatedToolCall;
 }
 
 const toolNames: Record<string, string> = {
@@ -14,20 +13,18 @@ const toolNames: Record<string, string> = {
   search_news: "搜索新闻",
 };
 
-export function ToolCallCard({ toolCall }: ToolCallCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { name, input, output, status } = toolCall;
+export function ToolCallCard({ aggregatedToolCall }: ToolCallCardProps) {
+  const { name, count, completedCount, status } = aggregatedToolCall;
 
   const displayName = toolNames[name] || name;
   const isRunning = status === "running";
   const isCompleted = status === "completed";
 
+  const countDisplay = count > 1 ? ` (${completedCount}/${count})` : "";
+
   return (
     <div className="my-3 rounded-xl border border-border-default bg-bg-tertiary overflow-hidden">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center gap-3 p-3 hover:bg-bg-elevated transition-colors"
-      >
+      <div className="flex items-center gap-3 p-3">
         <div
           className={cn(
             "w-8 h-8 rounded-lg flex items-center justify-center",
@@ -43,31 +40,10 @@ export function ToolCallCard({ toolCall }: ToolCallCardProps) {
           )}
         </div>
 
-        <div className="flex-1 text-left">
-          <span className="text-sm font-medium text-text-primary">
-            {isRunning ? `正在${displayName}...` : displayName}
-          </span>
-          {output && (
-            <span className="ml-2 text-xs text-text-tertiary">{output}</span>
-          )}
-        </div>
-
-        {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-text-tertiary" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-text-tertiary" />
-        )}
-      </button>
-
-      {isExpanded && (
-        <div className="px-3 pb-3 pt-0">
-          <div className="rounded-lg bg-bg-primary p-3 text-xs font-mono text-text-secondary">
-            <pre className="whitespace-pre-wrap break-words">
-              {JSON.stringify(input, null, 2)}
-            </pre>
-          </div>
-        </div>
-      )}
+        <span className="text-sm font-medium text-text-primary">
+          {isRunning ? `正在${displayName}${countDisplay}...` : `${displayName}${countDisplay}`}
+        </span>
+      </div>
     </div>
   );
 }

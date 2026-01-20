@@ -21,17 +21,28 @@ export interface UserCredits {
   is_active: boolean;
 }
 
+export type MessagePart =
+  | { type: "text"; content: string }
+  | { type: "tool_call"; toolCall: ToolCall };
+
 export interface Message {
   role: "user" | "assistant";
-  content: string;
-  toolCalls?: ToolCall[];
+  parts: MessagePart[];
 }
 
 export interface ToolCall {
+  id: string;
   name: string;
   input: Record<string, unknown>;
   output?: string;
   status: "pending" | "running" | "completed";
+}
+
+export interface AggregatedToolCall {
+  name: string;
+  count: number;
+  completedCount: number;
+  status: "running" | "completed";
 }
 
 export interface ChatUsage {
