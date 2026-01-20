@@ -2,19 +2,60 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### 开发环境
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### 生产环境部署
+
+```bash
+# 1. 安装依赖
+pnpm install
+
+# 2. 构建生产版本
+pnpm build
+
+# 3. 启动生产服务器（默认端口 3000）
+pnpm start
+
+# 或指定端口
+PORT=8080 pnpm start
+
+# 后台运行（使用 nohup）
+nohup pnpm start > lumina.log 2>&1 &
+
+# 后台运行并指定端口
+nohup sh -c 'PORT=8080 pnpm start' > lumina.log 2>&1 &
+
+# 查看后台进程
+ps aux | grep next
+
+# 停止后台进程
+kill $(lsof -t -i:3000)  # 停止 3000 端口的进程
+```
+
+**使用 PM2 进行进程管理（推荐生产环境）：**
+
+```bash
+# 安装 PM2
+npm install -g pm2
+
+# 启动服务
+pm2 start npm --name "lumina-frontend" -- start
+
+# 或指定端口
+pm2 start npm --name "lumina-frontend" -- start -- -p 8080
+
+# 常用命令
+pm2 list          # 查看进程列表
+pm2 logs          # 查看日志
+pm2 restart all   # 重启所有服务
+pm2 stop all      # 停止所有服务
+```
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
