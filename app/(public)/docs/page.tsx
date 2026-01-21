@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui";
-import { Footer } from "@/components/layout/Footer";
+
 import { useAuthStore } from "@/stores/authStore";
 import { 
   ArrowLeft, 
@@ -169,7 +169,6 @@ export default function DocsPage() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui";
-import { Footer } from "@/components/layout/Footer";
+
 import { useAuthStore } from "@/stores/authStore";
 import {
   TrendingUp,
@@ -281,8 +281,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <Footer />
     </div>
   );
 }

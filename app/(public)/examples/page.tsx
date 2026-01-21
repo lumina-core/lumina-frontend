@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui";
-import { Footer } from "@/components/layout/Footer";
+
 import { useAuthStore } from "@/stores/authStore";
 import { ArrowLeft } from "lucide-react";
 
@@ -73,7 +73,6 @@ export default function ExamplesPage() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

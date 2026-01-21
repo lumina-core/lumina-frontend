@@ -1,14 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui";
-import { Footer } from "@/components/layout/Footer";
 import { useAuthStore } from "@/stores/authStore";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Mail, MessageCircle, X } from "lucide-react";
 
 export default function AboutPage() {
   const { isAuthenticated } = useAuthStore();
+  const [showQrCode, setShowQrCode] = useState(false);
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
@@ -66,14 +68,64 @@ export default function AboutPage() {
             了解更多关于 Lumina 和我们的故事。
           </p>
           
-          {/* Placeholder content */}
-          <div className="rounded-xl border border-border-default bg-bg-secondary p-12 text-center">
-            <p className="text-text-tertiary">内容建设中...</p>
+          {/* Contact Section */}
+          <div className="rounded-xl border border-border-default bg-bg-secondary p-8">
+            <h2 className="text-xl font-semibold text-text-primary mb-6">联系我</h2>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <a
+                href="mailto:lumina_dev@163.com"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-bg-tertiary hover:bg-bg-primary transition-colors"
+              >
+                <Mail className="w-5 h-5 text-brand-primary" />
+                <div>
+                  <p className="text-sm font-medium text-text-primary">邮箱</p>
+                  <p className="text-xs text-text-secondary">lumina_dev@163.com</p>
+                </div>
+              </a>
+              <button
+                onClick={() => setShowQrCode(true)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-bg-tertiary hover:bg-bg-primary transition-colors text-left"
+              >
+                <MessageCircle className="w-5 h-5 text-brand-primary" />
+                <div>
+                  <p className="text-sm font-medium text-text-primary">QQ</p>
+                  <p className="text-xs text-text-secondary">扫码添加</p>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </main>
 
-      <Footer />
+      {/* QR Code Modal */}
+      {showQrCode && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowQrCode(false)}
+        >
+          <div
+            className="relative bg-bg-secondary rounded-xl p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowQrCode(false)}
+              className="absolute top-2 right-2 p-1 rounded-lg hover:bg-bg-tertiary transition-colors"
+            >
+              <X className="w-5 h-5 text-text-tertiary" />
+            </button>
+            <div className="text-center">
+              <p className="text-text-primary font-medium mb-4">扫描二维码添加 QQ</p>
+              <Image
+                src="/images/qrcode-qq.JPG"
+                alt="QQ 二维码"
+                width={200}
+                height={200}
+                className="rounded-lg"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
