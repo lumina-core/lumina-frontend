@@ -35,13 +35,7 @@ export function useChat() {
     });
   };
 
-  // 获取消息的纯文本内容
-  const getMessageText = (msg: Message): string => {
-    return msg.parts
-      .filter((p) => p.type === "text")
-      .map((p) => (p as { type: "text"; content: string }).content)
-      .join("");
-  };
+
 
   // 将历史消息转换为前端 Message 格式
   const convertHistoryMessages = (historyMessages: ChatHistoryMessage[]): Message[] => {

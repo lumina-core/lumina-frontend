@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import type { Message, ToolCall, ChatUsage, MessagePart, ChatSession } from "@/types";
 
-let toolCallIdCounter = 0;
-const generateToolCallId = () => `tool_${Date.now()}_${++toolCallIdCounter}`;
+const generateToolCallId = () => 
+  typeof crypto !== "undefined" && crypto.randomUUID 
+    ? crypto.randomUUID() 
+    : `tool_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
 interface ChatState {
   messages: Message[];

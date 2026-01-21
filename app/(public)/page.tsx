@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui";
-
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import { useAuthStore } from "@/stores/authStore";
 import {
   TrendingUp,
@@ -19,6 +18,7 @@ import {
   Mail,
   MessageCircle,
   X,
+  ArrowRight,
 } from "lucide-react";
 
 function ContactQrButton() {
@@ -117,47 +117,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border-default bg-bg-secondary/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Logo />
-            <nav className="hidden md:flex items-center gap-6">
-              <Link href="/examples" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
-                使用示例
-              </Link>
-              <Link href="/pricing" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
-                产品套餐
-              </Link>
-              <Link href="/docs" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
-                文档
-              </Link>
-              <Link href="/changelog" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
-                更新日志
-              </Link>
-              <Link href="/about" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
-                关于
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            {isAuthenticated ? (
-              <Link href="/chat">
-                <Button>进入应用</Button>
-              </Link>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost">登录</Button>
-                </Link>
-                <Link href="/register">
-                  <Button>免费注册</Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero Section */}
       <section className="flex-1 flex flex-col items-center justify-center px-6 py-20">
@@ -180,19 +140,28 @@ export default function LandingPage() {
             让信息搜集和分析更高效、更智能
           </p>
           <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center justify-center gap-4">
-              <a href="#contact">
+            {isAuthenticated ? (
+              <Link href="/chat">
                 <Button size="lg" className="px-8">
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  获取邀请码
-                </Button>
-              </a>
-              <Link href="/login">
-                <Button size="lg" variant="secondary" className="px-8">
-                  已有邀请码？登录
+                  <ArrowRight className="w-5 h-5 mr-2" />
+                  开始使用
                 </Button>
               </Link>
-            </div>
+            ) : (
+              <div className="flex items-center justify-center gap-4">
+                <a href="#contact">
+                  <Button size="lg" className="px-8">
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    获取邀请码
+                  </Button>
+                </a>
+                <Link href="/login">
+                  <Button size="lg" variant="secondary" className="px-8">
+                    已有邀请码？登录
+                  </Button>
+                </Link>
+              </div>
+            )}
             <p className="text-sm text-text-tertiary">
               内测期间免费体验，欢迎反馈建议
             </p>
@@ -267,7 +236,7 @@ export default function LandingPage() {
             内测期间完全免费，我们期待您的体验反馈，帮助我们做得更好
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="mailto:your-email@example.com?subject=申请Lumina内测邀请码&body=您好，我希望申请Lumina内测邀请码。%0A%0A我的使用场景：">
+            <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contact@lumina.ai"}?subject=申请Lumina内测邀请码&body=您好，我希望申请Lumina内测邀请码。%0A%0A我的使用场景：`}>
               <Button size="lg" className="px-8">
                 <Mail className="w-5 h-5 mr-2" />
                 邮件联系

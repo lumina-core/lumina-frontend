@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button, FadeIn, SkeletonHistoryList, AnimatePresence, motion } from "@/components/ui";
+import { Button, SkeletonHistoryList, AnimatePresence, motion } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { ChatSession } from "@/types";
 import { 
@@ -13,6 +13,9 @@ import {
   Trash2, 
   Star,
   StarOff,
+  Share2,
+  Link as LinkIcon,
+  Check,
 } from "lucide-react";
 
 type FilterType = "all" | "starred";
@@ -22,6 +25,7 @@ export default function HistoryPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   // Debounce search
@@ -53,6 +57,20 @@ export default function HistoryPage() {
     },
   });
 
+  const shareMutation = useMutation({
+    mutationFn: (id: number) => api.shareSession(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chatSessions"] });
+    },
+  });
+
+  const unshareMutation = useMutation({
+    mutationFn: (id: number) => api.unshareSession(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chatSessions"] });
+    },
+  });
+
   const toggleStar = useCallback((session: ChatSession) => {
     toggleStarMutation.mutate({ id: session.id, starred: !session.starred });
   }, [toggleStarMutation]);
@@ -62,6 +80,25 @@ export default function HistoryPage() {
       deleteMutation.mutate(id);
     }
   }, [deleteMutation]);
+
+  const handleShare = useCallback(async (session: ChatSession) => {
+    if (session.is_public && session.share_url) {
+      await navigator.clipboard.writeText(session.share_url);
+      setCopiedId(session.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } else {
+      const result = await shareMutation.mutateAsync(session.id);
+      await navigator.clipboard.writeText(result.share_url);
+      setCopiedId(session.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  }, [shareMutation]);
+
+  const handleUnshare = useCallback((id: number) => {
+    if (confirm("确定要取消分享吗？取消后链接将失效。")) {
+      unshareMutation.mutate(id);
+    }
+  }, [unshareMutation]);
 
   const openSession = useCallback((sessionId: number) => {
     router.push(`/chat?session=${sessionId}`);
@@ -185,6 +222,36 @@ export default function HistoryPage() {
                   
                   {/* Actions */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShare(item);
+                      }}
+                      disabled={shareMutation.isPending}
+                      className="p-2 rounded-lg hover:bg-bg-tertiary transition-colors disabled:opacity-50"
+                      title={item.is_public ? "复制分享链接" : "分享"}
+                    >
+                      {copiedId === item.id ? (
+                        <Check className="w-4 h-4 text-success" />
+                      ) : item.is_public ? (
+                        <LinkIcon className="w-4 h-4 text-brand-primary" />
+                      ) : (
+                        <Share2 className="w-4 h-4 text-text-tertiary" />
+                      )}
+                    </button>
+                    {item.is_public && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUnshare(item.id);
+                        }}
+                        disabled={unshareMutation.isPending}
+                        className="p-2 rounded-lg hover:bg-bg-tertiary transition-colors disabled:opacity-50 text-xs text-text-tertiary hover:text-error"
+                        title="取消分享"
+                      >
+                        取消
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

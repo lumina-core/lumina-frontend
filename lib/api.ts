@@ -1,4 +1,4 @@
-import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, CheckinResponse, ShareResponse, SharedSession } from "@/types";
+import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, CheckinResponse, ShareResponse, SharedSession, FeaturedExamplesResponse } from "@/types";
 
 const API_BASE = "/api/v1";
 
@@ -157,6 +157,12 @@ class ApiClient {
 
   async getSharedSession(shareToken: string) {
     return this.request<SharedSession>(`/history/shared/${shareToken}`);
+  }
+
+  // Examples
+  async getFeaturedExamples(category?: string) {
+    const params = category ? `?category=${encodeURIComponent(category)}` : "";
+    return this.request<FeaturedExamplesResponse>(`/examples${params}`);
   }
 
   // Chat Stream (uses dedicated API route to avoid buffering)

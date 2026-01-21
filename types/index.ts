@@ -128,3 +128,18 @@ export interface ChatMessageListResponse {
   total: number;
   items: ChatHistoryMessage[];
 }
+
+export interface FeaturedExample {
+  id: number;
+  title: string;
+  preview: string | null;
+  category: string | null;
+  share_token: string;
+  message_count: number;
+  created_at: string;
+}
+
+export interface FeaturedExamplesResponse {
+  categories: string[];
+  examples: FeaturedExample[];
+}

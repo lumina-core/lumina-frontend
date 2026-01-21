@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useChat } from "@/hooks/useChat";
 import { MessageList } from "@/components/chat/MessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
@@ -12,8 +13,6 @@ import { SkeletonCard } from "@/components/ui";
 function ChatContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session");
-  const [isLoadingSession, setIsLoadingSession] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   const {
     messages,
@@ -25,25 +24,23 @@ function ChatContent() {
     startNewChat,
   } = useChat();
 
-  // 加载历史会话
-  useEffect(() => {
-    if (sessionId) {
-      const id = parseInt(sessionId, 10);
-      if (!isNaN(id) && (!currentSession || currentSession.id !== id)) {
-        setIsLoadingSession(true);
-        setLoadError(null);
-        loadSession(id)
-          .catch((err) => {
-            setLoadError(err.message || "加载会话失败");
-          })
-          .finally(() => {
-            setIsLoadingSession(false);
-          });
-      }
-    }
-  }, [sessionId, currentSession, loadSession]);
+  const sessionIdNum = sessionId ? parseInt(sessionId, 10) : null;
+  const shouldLoadSession = sessionIdNum !== null && !isNaN(sessionIdNum) && 
+    (!currentSession || currentSession.id !== sessionIdNum);
 
-  // 如果没有 sessionId 且有 currentSession，说明是从历史跳转后又清除了参数
+  const { isLoading: isLoadingSession, error: loadError } = useQuery({
+    queryKey: ["chatSession", sessionIdNum],
+    queryFn: async () => {
+      if (sessionIdNum) {
+        await loadSession(sessionIdNum);
+      }
+      return null;
+    },
+    enabled: shouldLoadSession,
+    retry: false,
+  });
+
+  // 当会话加载完成后，同步数据
   useEffect(() => {
     if (!sessionId && currentSession) {
       // URL 参数被清除了，可能需要重置状态
@@ -69,7 +66,7 @@ function ChatContent() {
   if (loadError) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center h-full">
-        <p className="text-error mb-4">{loadError}</p>
+        <p className="text-error mb-4">{loadError instanceof Error ? loadError.message : "加载会话失败"}</p>
         <button
           onClick={startNewChat}
           className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90"

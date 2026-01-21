@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
-import { Button } from "@/components/ui";
-import { useAuthStore } from "@/stores/authStore";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import { ArrowLeft, Sparkles, Wrench, Zap } from "lucide-react";
 
 const changelogs = [
@@ -64,51 +62,9 @@ const typeConfig = {
 };
 
 export default function ChangelogPage() {
-  const { isAuthenticated } = useAuthStore();
-
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border-default bg-bg-secondary/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Logo />
-            <nav className="hidden md:flex items-center gap-6">
-              <Link href="/examples" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
-                使用示例
-              </Link>
-              <Link href="/pricing" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
-                产品套餐
-              </Link>
-              <Link href="/docs" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
-                文档
-              </Link>
-              <Link href="/changelog" className="text-sm text-text-primary font-medium">
-                更新日志
-              </Link>
-              <Link href="/about" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
-                关于
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            {isAuthenticated ? (
-              <Link href="/chat">
-                <Button>进入应用</Button>
-              </Link>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost">登录</Button>
-                </Link>
-                <Link href="/register">
-                  <Button>免费注册</Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Content */}
       <main className="flex-1 py-16 px-6">
@@ -124,7 +80,7 @@ export default function ChangelogPage() {
           
           {/* Changelog List */}
           <div className="space-y-8">
-            {changelogs.map((log, index) => {
+            {changelogs.map((log) => {
               const config = typeConfig[log.type];
               const Icon = config.icon;
               return (

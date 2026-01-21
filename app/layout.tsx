@@ -15,8 +15,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lumina - AI 新闻分析助手",
+  title: {
+    default: "Lumina - AI 新闻分析助手",
+    template: "%s | Lumina",
+  },
   description: "专业的 AI 新闻分析助手，帮助投资者、研究员、企业决策者从海量新闻中快速获取洞察。",
+  keywords: ["AI", "新闻分析", "投资", "研究", "智能助手", "Lumina"],
+  authors: [{ name: "Lumina Team" }],
+  creator: "Lumina",
+  openGraph: {
+    type: "website",
+    locale: "zh_CN",
+    siteName: "Lumina",
+    title: "Lumina - AI 新闻分析助手",
+    description: "专业的 AI 新闻分析助手，帮助投资者、研究员、企业决策者从海量新闻中快速获取洞察。",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lumina - AI 新闻分析助手",
+    description: "专业的 AI 新闻分析助手，帮助投资者、研究员、企业决策者从海量新闻中快速获取洞察。",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
