@@ -24,6 +24,9 @@ export default function AboutPage() {
               <Link href="/pricing" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
                 产品套餐
               </Link>
+              <Link href="/docs" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
+                文档
+              </Link>
               <Link href="/changelog" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
                 更新日志
               </Link>

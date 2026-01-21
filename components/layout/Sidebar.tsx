@@ -16,6 +16,7 @@ import {
   X,
   User,
   Home,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -61,7 +62,7 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 overflow-y-auto">
+      <nav className="flex-1 px-2 overflow-y-auto space-y-1">
         <Link href="/" onClick={() => setIsMobileOpen(false)}>
           <Button
             variant="ghost"
@@ -71,7 +72,18 @@ export function Sidebar({ className }: SidebarProps) {
             首页
           </Button>
         </Link>
-        {/* Future: Chat history list */}
+        <Link href="/history" onClick={() => setIsMobileOpen(false)}>
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-2 text-text-secondary hover:text-text-primary",
+              pathname === "/history" && "bg-bg-tertiary text-text-primary"
+            )}
+          >
+            <History className="w-4 h-4" />
+            历史记录
+          </Button>
+        </Link>
       </nav>
 
       {/* User Section */}
