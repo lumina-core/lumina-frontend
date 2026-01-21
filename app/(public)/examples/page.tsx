@@ -21,6 +21,9 @@ export default function ExamplesPage() {
               <Link href="/examples" className="text-sm text-text-primary font-medium">
                 使用示例
               </Link>
+              <Link href="/pricing" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
+                产品套餐
+              </Link>
               <Link href="/changelog" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
                 更新日志
               </Link>
