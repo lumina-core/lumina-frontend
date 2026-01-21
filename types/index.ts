@@ -136,10 +136,35 @@ export interface FeaturedExample {
   category: string | null;
   share_token: string;
   message_count: number;
+  contributor: string | null;
   created_at: string;
 }
 
 export interface FeaturedExamplesResponse {
   categories: string[];
   examples: FeaturedExample[];
+}
+
+// 使用示例提交相关类型
+export interface ExampleSubmission {
+  id: number;
+  chat_session_id: number;
+  display_name: string;
+  status: "pending" | "reviewing" | "approved" | "rejected";
+  llm_score: number | null;
+  llm_category: string | null;
+  llm_reason: string | null;
+  submitted_at: string;
+  reviewed_at: string | null;
+}
+
+export interface ExampleSubmissionListResponse {
+  total: number;
+  items: ExampleSubmission[];
+}
+
+export interface SubmitExampleResponse {
+  success: boolean;
+  message: string;
+  submission_id: number | null;
 }

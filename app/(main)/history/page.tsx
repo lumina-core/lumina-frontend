@@ -16,16 +16,21 @@ import {
   Share2,
   Link as LinkIcon,
   Check,
+  Sparkles,
 } from "lucide-react";
+import { SubmitExampleModal } from "@/components/chat/SubmitExampleModal";
+import { useAuthStore } from "@/stores/authStore";
 
 type FilterType = "all" | "starred";
 
 export default function HistoryPage() {
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [submitModalSession, setSubmitModalSession] = useState<ChatSession | null>(null);
   const queryClient = useQueryClient();
 
   // Debounce search
@@ -81,18 +86,24 @@ export default function HistoryPage() {
     }
   }, [deleteMutation]);
 
+  const buildShareUrl = useCallback((shareToken: string) => {
+    return `${window.location.origin}/share/${shareToken}`;
+  }, []);
+
   const handleShare = useCallback(async (session: ChatSession) => {
-    if (session.is_public && session.share_url) {
-      await navigator.clipboard.writeText(session.share_url);
+    if (session.is_public && session.share_token) {
+      const shareUrl = buildShareUrl(session.share_token);
+      await navigator.clipboard.writeText(shareUrl);
       setCopiedId(session.id);
       setTimeout(() => setCopiedId(null), 2000);
     } else {
       const result = await shareMutation.mutateAsync(session.id);
-      await navigator.clipboard.writeText(result.share_url);
+      const shareUrl = buildShareUrl(result.share_token);
+      await navigator.clipboard.writeText(shareUrl);
       setCopiedId(session.id);
       setTimeout(() => setCopiedId(null), 2000);
     }
-  }, [shareMutation]);
+  }, [shareMutation, buildShareUrl]);
 
   const handleUnshare = useCallback((id: number) => {
     if (confirm("确定要取消分享吗？取消后链接将失效。")) {
@@ -225,6 +236,16 @@ export default function HistoryPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        setSubmitModalSession(item);
+                      }}
+                      className="p-2 rounded-lg hover:bg-bg-tertiary transition-colors"
+                      title="提交为使用示例"
+                    >
+                      <Sparkles className="w-4 h-4 text-text-tertiary hover:text-brand-primary" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleShare(item);
                       }}
                       disabled={shareMutation.isPending}
@@ -286,6 +307,15 @@ export default function HistoryPage() {
           </motion.div>
         )}
       </div>
+
+      {/* Submit Example Modal */}
+      <SubmitExampleModal
+        isOpen={!!submitModalSession}
+        onClose={() => setSubmitModalSession(null)}
+        sessionId={submitModalSession?.id ?? 0}
+        sessionTitle={submitModalSession?.title ?? ""}
+        defaultDisplayName={user?.name || user?.email?.split("@")[0] || ""}
+      />
     </div>
   );
 }

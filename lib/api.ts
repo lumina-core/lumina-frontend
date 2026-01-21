@@ -1,4 +1,4 @@
-import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, CheckinResponse, ShareResponse, SharedSession, FeaturedExamplesResponse } from "@/types";
+import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, CheckinResponse, ShareResponse, SharedSession, FeaturedExamplesResponse, ExampleSubmissionListResponse, SubmitExampleResponse } from "@/types";
 
 const API_BASE = "/api/v1";
 
@@ -163,6 +163,18 @@ class ApiClient {
   async getFeaturedExamples(category?: string) {
     const params = category ? `?category=${encodeURIComponent(category)}` : "";
     return this.request<FeaturedExamplesResponse>(`/examples${params}`);
+  }
+
+  async submitExample(chatSessionId: number, displayName: string) {
+    return this.request<SubmitExampleResponse>("/examples/submit", {
+      method: "POST",
+      body: JSON.stringify({ chat_session_id: chatSessionId, display_name: displayName }),
+    });
+  }
+
+  async getMySubmissions(status?: string) {
+    const params = status ? `?status=${encodeURIComponent(status)}` : "";
+    return this.request<ExampleSubmissionListResponse>(`/examples/submissions${params}`);
   }
 
   // Chat Stream (uses dedicated API route to avoid buffering)

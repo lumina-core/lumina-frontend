@@ -16,6 +16,9 @@ import {
   Users,
   FileText,
   Sparkles,
+  Heart,
+  Cpu,
+  User,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import type { FeaturedExample } from "@/types";
@@ -25,6 +28,8 @@ const categoryIcons: Record<string, React.ReactNode> = {
   行业研究: <Building2 className="w-5 h-5" />,
   企业决策: <Users className="w-5 h-5" />,
   政策解读: <FileText className="w-5 h-5" />,
+  民生热点: <Heart className="w-5 h-5" />,
+  科技创新: <Cpu className="w-5 h-5" />,
 };
 
 export default function ExamplesPage() {
@@ -229,6 +234,12 @@ function ExampleCard({
             <MessageSquare className="w-3 h-3" />
             {example.message_count} 条消息
           </span>
+          {example.contributor && (
+            <span className="flex items-center gap-1">
+              <User className="w-3 h-3" />
+              {example.contributor}
+            </span>
+          )}
         </div>
       </Link>
     </motion.div>
