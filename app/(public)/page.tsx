@@ -120,7 +120,20 @@ export default function LandingPage() {
       {/* Header */}
       <header className="border-b border-border-default bg-bg-secondary/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Logo />
+          <div className="flex items-center gap-8">
+            <Logo />
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/examples" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
+                使用示例
+              </Link>
+              <Link href="/changelog" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
+                更新日志
+              </Link>
+              <Link href="/about" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
+                关于
+              </Link>
+            </nav>
+          </div>
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <Link href="/chat">
