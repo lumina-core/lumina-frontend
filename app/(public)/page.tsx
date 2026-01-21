@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui";
 import { Footer } from "@/components/layout/Footer";
+import { useAuthStore } from "@/stores/authStore";
 import {
   TrendingUp,
   Building2,
@@ -112,6 +113,8 @@ const useCases = [
 ];
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
       {/* Header */}
@@ -119,12 +122,20 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Logo />
           <div className="flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost">登录</Button>
-            </Link>
-            <Link href="/register">
-              <Button>免费注册</Button>
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/chat">
+                <Button>进入应用</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost">登录</Button>
+                </Link>
+                <Link href="/register">
+                  <Button>免费注册</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>

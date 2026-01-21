@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   User,
+  Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +62,15 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 px-2 overflow-y-auto">
+        <Link href="/" onClick={() => setIsMobileOpen(false)}>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2 text-text-secondary hover:text-text-primary"
+          >
+            <Home className="w-4 h-4" />
+            首页
+          </Button>
+        </Link>
         {/* Future: Chat history list */}
       </nav>
 
