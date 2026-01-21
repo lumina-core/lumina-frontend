@@ -93,7 +93,7 @@ export default function RegisterPage() {
       });
       setToken(res.access_token);
       setUser(res.user);
-      router.push("/");
+      router.push("/chat");
     } catch (err) {
       setError(err instanceof Error ? err.message : "注册失败");
     } finally {

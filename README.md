@@ -35,7 +35,17 @@ nohup sh -c 'PORT=8080 pnpm start' > lumina.log 2>&1 &
 ps aux | grep next
 
 # 停止后台进程
-kill $(lsof -t -i:3000)  # 停止 3000 端口的进程
+# 方法 1: 使用 ss 查找并 kill（推荐）
+ss -tlnp | grep 3000
+# 输出类似: LISTEN 0 511 *:3000 *:* users:(("node",pid=12345,fd=18))
+# 找到 pid 值（如 12345），然后执行:
+kill <PID>  # 例如: kill 12345
+
+# 方法 2: 使用 fuser 一步搞定
+fuser -k 3000/tcp
+
+# 方法 3: 使用 lsof（可能需要 sudo）
+kill $(lsof -t -i:3000)
 ```
 
 **使用 PM2 进行进程管理（推荐生产环境）：**

@@ -31,7 +31,7 @@ export function Sidebar({ className }: SidebarProps) {
 
   const handleNewChat = () => {
     clearMessages();
-    router.push("/");
+    router.push("/chat");
     setIsMobileOpen(false);
   };
 

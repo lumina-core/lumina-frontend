@@ -38,7 +38,7 @@ export default function LoginPage() {
 
     try {
       await login(data.email, data.password);
-      router.push("/");
+      router.push("/chat");
     } catch (err) {
       setError(err instanceof Error ? err.message : "登录失败");
     } finally {
