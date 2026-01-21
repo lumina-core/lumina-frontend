@@ -8,6 +8,19 @@ import { ArrowLeft, Sparkles, Wrench, Zap } from "lucide-react";
 
 const changelogs = [
   {
+    version: "0.4.0",
+    date: "2025-01-21",
+    type: "feature" as const,
+    title: "聊天功能与用户体验升级",
+    changes: [
+      "聊天会话持久化，支持从历史记录加载对话",
+      "新增每日签到功能，签到可获取积分奖励",
+      "注册流程优化，邀请码改为可选",
+      "历史记录页面新增动画效果和加载状态",
+      "新增骨架屏组件，提升页面加载体验",
+    ],
+  },
+  {
     version: "0.3.0",
     date: "2025-01-20",
     type: "feature" as const,
