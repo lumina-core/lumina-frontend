@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { Send, Square } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/authStore";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -13,6 +15,8 @@ interface ChatInputProps {
 export function ChatInput({ onSend, disabled, isStreaming }: ChatInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -23,6 +27,10 @@ export function ChatInput({ onSend, disabled, isStreaming }: ChatInputProps) {
 
   const handleSend = () => {
     if (!value.trim() || disabled || isStreaming) return;
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
     onSend(value.trim());
     setValue("");
   };

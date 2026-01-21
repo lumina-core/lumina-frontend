@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button, FadeIn, SkeletonHistoryList, AnimatePresence, motion } from "@/components/ui";
+import { api } from "@/lib/api";
+import type { ChatSession } from "@/types";
 import { 
   Search, 
   Calendar, 
@@ -9,78 +13,65 @@ import {
   Trash2, 
   Star,
   StarOff,
-  MoreHorizontal,
-  Clock,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-interface ChatHistory {
-  id: string;
-  title: string;
-  preview: string;
-  createdAt: string;
-  messageCount: number;
-  starred: boolean;
-}
-
-const mockHistory: ChatHistory[] = [
-  {
-    id: "1",
-    title: "新能源汽车行业分析",
-    preview: "最近有哪些关于新能源汽车的重要新闻？特别是关于电池技术...",
-    createdAt: "2024-01-20",
-    messageCount: 12,
-    starred: true,
-  },
-  {
-    id: "2",
-    title: "低空经济发展趋势",
-    preview: "分析一下低空经济的发展趋势，特别是无人机配送领域...",
-    createdAt: "2024-01-19",
-    messageCount: 8,
-    starred: false,
-  },
-  {
-    id: "3",
-    title: "AI 芯片竞争格局",
-    preview: "目前 AI 芯片市场的竞争格局如何？英伟达的优势在哪里...",
-    createdAt: "2024-01-18",
-    messageCount: 15,
-    starred: true,
-  },
-  {
-    id: "4",
-    title: "光伏产业链分析",
-    preview: "光伏产业链上下游的最新动态，特别是硅料价格走势...",
-    createdAt: "2024-01-17",
-    messageCount: 6,
-    starred: false,
-  },
-];
 
 type FilterType = "all" | "starred";
 
 export default function HistoryPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [history, setHistory] = useState(mockHistory);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const queryClient = useQueryClient();
 
-  const filteredHistory = history.filter((item) => {
-    const matchesFilter = filter === "all" || (filter === "starred" && item.starred);
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.preview.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["chatSessions", filter, debouncedSearch],
+    queryFn: () => api.getChatSessions({
+      starred: filter === "starred",
+      search: debouncedSearch || undefined,
+    }),
   });
 
-  const toggleStar = (id: string) => {
-    setHistory(prev => prev.map(item => 
-      item.id === id ? { ...item, starred: !item.starred } : item
-    ));
+  const toggleStarMutation = useMutation({
+    mutationFn: ({ id, starred }: { id: number; starred: boolean }) =>
+      api.updateChatSession(id, { starred }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chatSessions"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.deleteChatSession(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chatSessions"] });
+    },
+  });
+
+  const toggleStar = useCallback((session: ChatSession) => {
+    toggleStarMutation.mutate({ id: session.id, starred: !session.starred });
+  }, [toggleStarMutation]);
+
+  const deleteItem = useCallback((id: number) => {
+    if (confirm("确定要删除这个对话吗？")) {
+      deleteMutation.mutate(id);
+    }
+  }, [deleteMutation]);
+
+  const openSession = useCallback((sessionId: number) => {
+    router.push(`/chat?session=${sessionId}`);
+  }, [router]);
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("zh-CN");
   };
 
-  const deleteItem = (id: string) => {
-    setHistory(prev => prev.filter(item => item.id !== id));
-  };
+  const sessions = data?.items || [];
 
   return (
     <div className="flex-1 flex flex-col h-full">
@@ -124,7 +115,16 @@ export default function HistoryPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {filteredHistory.length === 0 ? (
+        {isLoading ? (
+          <div className="max-w-3xl mx-auto">
+            <SkeletonHistoryList count={5} />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <p className="text-error mb-2">加载失败</p>
+            <p className="text-sm text-text-tertiary">{error instanceof Error ? error.message : "请稍后重试"}</p>
+          </div>
+        ) : sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-16 h-16 rounded-full bg-bg-tertiary flex items-center justify-center mb-4">
               <MessageSquare className="w-8 h-8 text-text-tertiary" />
@@ -133,11 +133,28 @@ export default function HistoryPage() {
             <p className="text-sm text-text-tertiary">开始新对话后，记录将显示在这里</p>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto space-y-3">
-            {filteredHistory.map((item) => (
-              <div
+          <motion.div 
+            className="max-w-3xl mx-auto space-y-3"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
+            }}
+          >
+            <AnimatePresence mode="popLayout">
+            {sessions.map((item) => (
+              <motion.div
                 key={item.id}
-                className="group p-4 rounded-xl border border-border-default bg-bg-secondary hover:border-border-hover transition-colors cursor-pointer"
+                layout
+                variants={{
+                  hidden: { opacity: 0, y: 15 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+                exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                whileHover={{ y: -2 }}
+                onClick={() => openSession(item.id)}
+                className="group p-4 rounded-xl border border-border-default bg-bg-secondary hover:border-border-hover hover:shadow-lg transition-shadow cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -149,17 +166,19 @@ export default function HistoryPage() {
                         <Star className="w-4 h-4 text-warning fill-warning flex-shrink-0" />
                       )}
                     </div>
-                    <p className="text-sm text-text-secondary line-clamp-2 mb-2">
-                      {item.preview}
-                    </p>
+                    {item.preview && (
+                      <p className="text-sm text-text-secondary line-clamp-2 mb-2">
+                        {item.preview}
+                      </p>
+                    )}
                     <div className="flex items-center gap-4 text-xs text-text-tertiary">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        {item.createdAt}
+                        {formatDate(item.created_at)}
                       </span>
                       <span className="flex items-center gap-1">
                         <MessageSquare className="w-3 h-3" />
-                        {item.messageCount} 条消息
+                        {item.message_count} 条消息
                       </span>
                     </div>
                   </div>
@@ -169,9 +188,10 @@ export default function HistoryPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleStar(item.id);
+                        toggleStar(item);
                       }}
-                      className="p-2 rounded-lg hover:bg-bg-tertiary transition-colors"
+                      disabled={toggleStarMutation.isPending}
+                      className="p-2 rounded-lg hover:bg-bg-tertiary transition-colors disabled:opacity-50"
                       title={item.starred ? "取消收藏" : "收藏"}
                     >
                       {item.starred ? (
@@ -185,16 +205,18 @@ export default function HistoryPage() {
                         e.stopPropagation();
                         deleteItem(item.id);
                       }}
-                      className="p-2 rounded-lg hover:bg-bg-tertiary transition-colors"
+                      disabled={deleteMutation.isPending}
+                      className="p-2 rounded-lg hover:bg-bg-tertiary transition-colors disabled:opacity-50"
                       title="删除"
                     >
                       <Trash2 className="w-4 h-4 text-text-tertiary hover:text-error" />
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
     </div>

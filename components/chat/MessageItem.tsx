@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkSupersub from "remark-supersub";
@@ -80,20 +81,35 @@ export function MessageItem({ message, isStreaming }: MessageItemProps) {
   if (isUser) {
     const userContent = parts[0]?.type === "text" ? parts[0].content : "";
     return (
-      <div className="flex justify-end mb-4">
+      <motion.div 
+        className="flex justify-end mb-4"
+        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.2 }}
+      >
         <div className="max-w-[70%] px-4 py-3 rounded-2xl bg-brand-primary text-white">
           <p className="whitespace-pre-wrap">{userContent}</p>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="mb-6">
+    <motion.div 
+      className="mb-6"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-lg bg-brand-primary/20 flex items-center justify-center shrink-0">
+        <motion.div 
+          className="w-8 h-8 rounded-lg bg-brand-primary/20 flex items-center justify-center shrink-0"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        >
           <Sparkles className="w-4 h-4 text-brand-primary" />
-        </div>
+        </motion.div>
 
         <div className="flex-1 min-w-0">
           {/* Render parts with aggregated tool calls */}
@@ -204,6 +220,6 @@ export function MessageItem({ message, isStreaming }: MessageItemProps) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

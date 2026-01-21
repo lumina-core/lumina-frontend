@@ -7,7 +7,7 @@ import { z } from "zod/v4";
 import { Button, Input, Card } from "@/components/ui";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
-import { User, Lock, Coins, ArrowLeft } from "lucide-react";
+import { User, Lock, Coins, ArrowLeft, Gift, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 const profileSchema = z.object({
@@ -27,12 +27,32 @@ type ProfileForm = z.infer<typeof profileSchema>;
 type PasswordForm = z.infer<typeof passwordSchema>;
 
 export default function SettingsPage() {
-  const { user, credits, setUser } = useAuthStore();
+  const { user, credits, setUser, fetchCredits } = useAuthStore();
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [isCheckinLoading, setIsCheckinLoading] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [checkinMessage, setCheckinMessage] = useState("");
   const [error, setError] = useState("");
+
+  const handleCheckin = async () => {
+    setIsCheckinLoading(true);
+    setCheckinMessage("");
+    setError("");
+
+    try {
+      const res = await api.checkin();
+      setCheckinMessage(res.success ? `签到成功！获得 ${res.credits_earned} 积分` : res.message);
+      if (res.success) {
+        fetchCredits();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "签到失败");
+    } finally {
+      setIsCheckinLoading(false);
+    }
+  };
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -106,14 +126,43 @@ export default function SettingsPage() {
             <div>
               <h2 className="font-medium">积分余额</h2>
               <p className="text-sm text-text-tertiary">
-                邀请码: {credits?.invite_code || "-"}
+                今日已用: {credits?.daily_used || 0} / {credits?.daily_limit || 100}
               </p>
             </div>
             <div className="ml-auto text-right">
               <p className="text-2xl font-semibold text-warning">
-                {credits?.credits.toLocaleString() || 0}
+                {credits?.credits?.toLocaleString() || 0}
               </p>
               <p className="text-xs text-text-tertiary">可用积分</p>
+            </div>
+          </div>
+
+          {/* Checkin Button */}
+          <div className="pt-4 border-t border-border-default">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Gift className="w-5 h-5 text-brand-primary" />
+                <span className="text-sm">每日签到</span>
+                {credits?.checked_in_today && (
+                  <span className="flex items-center gap-1 text-xs text-success">
+                    <CheckCircle className="w-3 h-3" />
+                    已签到
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {checkinMessage && (
+                  <span className="text-sm text-success">{checkinMessage}</span>
+                )}
+                <Button
+                  size="sm"
+                  onClick={handleCheckin}
+                  isLoading={isCheckinLoading}
+                  disabled={credits?.checked_in_today}
+                >
+                  {credits?.checked_in_today ? "已签到" : "签到领积分"}
+                </Button>
+              </div>
             </div>
           </div>
         </Card>

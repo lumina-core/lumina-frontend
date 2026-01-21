@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 
-const publicPaths = ["/", "/login", "/register", "/examples", "/pricing", "/docs", "/changelog", "/about"];
+const publicPaths = ["/", "/login", "/register", "/examples", "/pricing", "/docs", "/changelog", "/about", "/chat"];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -28,8 +28,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!isAuthenticated && !isPublicPath) {
       router.push("/login");
-    } else if (isAuthenticated && isPublicPath && pathname !== "/") {
-      router.push("/chat");
     }
   }, [isLoading, isAuthenticated, pathname, router]);
 

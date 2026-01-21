@@ -15,10 +15,21 @@ export interface AuthResponse {
 
 export interface UserCredits {
   user_id: number;
-  email: string;
-  invite_code: string;
   credits: number;
-  is_active: boolean;
+  daily_used: number;
+  daily_limit: number;
+  daily_remaining: number;
+  can_use: boolean;
+  last_checkin_date: string | null;
+  checked_in_today: boolean;
+}
+
+export interface CheckinResponse {
+  success: boolean;
+  message: string;
+  credits_earned: number;
+  current_credits: number;
+  streak_days: number;
 }
 
 export type MessagePart =
@@ -70,4 +81,50 @@ export interface SSEEvent {
 export interface PromptExample {
   category: string;
   prompts: string[];
+}
+
+export interface ChatSession {
+  id: number;
+  title: string;
+  preview: string | null;
+  message_count: number;
+  starred: boolean;
+  is_public: boolean;
+  share_token: string | null;
+  share_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShareResponse {
+  success: boolean;
+  share_token: string;
+  share_url: string;
+  message: string;
+}
+
+export interface SharedSession {
+  id: number;
+  title: string;
+  created_at: string;
+  messages: ChatHistoryMessage[];
+}
+
+export interface ChatHistoryMessage {
+  id: number;
+  session_id: number;
+  role: "user" | "assistant";
+  content: string;
+  tool_calls: string | null;
+  created_at: string;
+}
+
+export interface ChatSessionListResponse {
+  total: number;
+  items: ChatSession[];
+}
+
+export interface ChatMessageListResponse {
+  total: number;
+  items: ChatHistoryMessage[];
 }

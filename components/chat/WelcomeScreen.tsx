@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Logo } from "@/components/Logo";
 import { api } from "@/lib/api";
 import { TrendingUp, Building2, Users, FileText } from "lucide-react";
@@ -63,14 +64,40 @@ export function WelcomeScreen({ onSelectPrompt }: WelcomeScreenProps) {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-      <Logo size="lg" className="mb-2" />
-      <p className="text-text-secondary mb-12">AI 新闻分析助手，为您提供专业洞察</p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Logo size="lg" className="mb-2" />
+      </motion.div>
+      <motion.p 
+        className="text-text-secondary mb-12"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        AI 新闻分析助手，为您提供专业洞察
+      </motion.p>
 
-      <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-4">
+      <motion.div 
+        className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-4"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.3 } },
+        }}
+      >
         {examples.map((category) => (
-          <div
+          <motion.div
             key={category.category}
-            className="p-4 rounded-xl border border-border-default bg-bg-secondary hover:border-border-hover transition-colors"
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 },
+            }}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            className="p-4 rounded-xl border border-border-default bg-bg-secondary hover:border-border-hover hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center gap-2 mb-3 text-text-primary">
               <span className="text-brand-primary">
@@ -89,9 +116,9 @@ export function WelcomeScreen({ onSelectPrompt }: WelcomeScreenProps) {
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }

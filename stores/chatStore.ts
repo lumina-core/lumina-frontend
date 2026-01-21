@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Message, ToolCall, ChatUsage, MessagePart } from "@/types";
+import type { Message, ToolCall, ChatUsage, MessagePart, ChatSession } from "@/types";
 
 let toolCallIdCounter = 0;
 const generateToolCallId = () => `tool_${Date.now()}_${++toolCallIdCounter}`;
@@ -9,13 +9,18 @@ interface ChatState {
   isStreaming: boolean;
   activeToolCalls: Map<string, ToolCall>;
   lastUsage: ChatUsage | null;
-
+  
+  // Session management
+  currentSession: ChatSession | null;
+  
   addMessage: (message: Message) => void;
   appendTextToLastAssistant: (text: string) => void;
   addToolCallToLastAssistant: (toolCall: Omit<ToolCall, "id">) => void;
   updateToolCallStatus: (toolName: string, status: ToolCall["status"], output?: string) => void;
   setIsStreaming: (isStreaming: boolean) => void;
   setLastUsage: (usage: ChatUsage | null) => void;
+  setCurrentSession: (session: ChatSession | null) => void;
+  setMessages: (messages: Message[]) => void;
   clearMessages: () => void;
 }
 
@@ -24,6 +29,7 @@ export const useChatStore = create<ChatState>((set) => ({
   isStreaming: false,
   activeToolCalls: new Map(),
   lastUsage: null,
+  currentSession: null,
 
   addMessage: (message) => {
     set((state) => ({ messages: [...state.messages, message] }));
@@ -111,5 +117,14 @@ export const useChatStore = create<ChatState>((set) => ({
 
   setLastUsage: (lastUsage) => set({ lastUsage }),
 
-  clearMessages: () => set({ messages: [], activeToolCalls: new Map(), lastUsage: null }),
+  setCurrentSession: (currentSession) => set({ currentSession }),
+
+  setMessages: (messages) => set({ messages }),
+
+  clearMessages: () => set({ 
+    messages: [], 
+    activeToolCalls: new Map(), 
+    lastUsage: null,
+    currentSession: null,
+  }),
 }));

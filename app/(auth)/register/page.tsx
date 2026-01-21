@@ -14,7 +14,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { Mail, Lock, User, Ticket, KeyRound } from "lucide-react";
 
 const step1Schema = z.object({
-  invite_code: z.string().min(1, "请输入邀请码"),
+  invite_code: z.string().optional(),
   email: z.email("请输入有效的邮箱地址"),
 });
 
@@ -126,19 +126,9 @@ export default function RegisterPage() {
         </div>
       )}
 
-      {/* Step 1: Invite Code & Email */}
+      {/* Step 1: Email & Optional Invite Code */}
       {step === 1 && (
         <form onSubmit={step1Form.handleSubmit(handleStep1)} className="space-y-4">
-          <div className="relative">
-            <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
-            <Input
-              {...step1Form.register("invite_code")}
-              placeholder="邀请码"
-              className="pl-12"
-              error={step1Form.formState.errors.invite_code?.message}
-            />
-          </div>
-
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
             <Input
@@ -147,6 +137,15 @@ export default function RegisterPage() {
               placeholder="邮箱"
               className="pl-12"
               error={step1Form.formState.errors.email?.message}
+            />
+          </div>
+
+          <div className="relative">
+            <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+            <Input
+              {...step1Form.register("invite_code")}
+              placeholder="邀请码（可选，有邀请码可获得额外积分）"
+              className="pl-12"
             />
           </div>
 

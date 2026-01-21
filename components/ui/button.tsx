@@ -1,14 +1,22 @@
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+"use client";
+
+import { forwardRef } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps {
   variant?: "primary" | "secondary" | "ghost";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
+  className?: string;
+  disabled?: boolean;
+  children?: React.ReactNode;
+  onClick?: () => void;
+  type?: "button" | "submit" | "reset";
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", isLoading, disabled, children, ...props }, ref) => {
+  ({ className, variant = "primary", size = "md", isLoading, disabled, children, onClick, type = "button" }, ref) => {
     const baseStyles =
       "inline-flex items-center justify-center font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-brand-primary/50";
 
@@ -26,12 +34,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       lg: "h-12 px-6 text-base rounded-xl",
     };
 
+    const isDisabled = disabled || isLoading;
+
     return (
-      <button
+      <motion.button
         ref={ref}
+        type={type}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
-        disabled={disabled || isLoading}
-        {...props}
+        disabled={isDisabled}
+        onClick={onClick}
+        whileTap={isDisabled ? undefined : { scale: 0.97 }}
+        transition={{ duration: 0.1 }}
       >
         {isLoading ? (
           <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24">
@@ -52,7 +65,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           </svg>
         ) : null}
         {children}
-      </button>
+      </motion.button>
     );
   }
 );

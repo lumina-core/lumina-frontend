@@ -1,4 +1,4 @@
-import type { AuthResponse, User, UserCredits, PromptExample } from "@/types";
+import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, CheckinResponse, ShareResponse, SharedSession } from "@/types";
 
 const API_BASE = "/api/v1";
 
@@ -36,10 +36,10 @@ class ApiClient {
   }
 
   // Auth
-  async sendCode(email: string, invite_code: string) {
+  async sendCode(email: string, invite_code?: string) {
     return this.request<{ success: boolean; message: string }>("/auth/send-code", {
       method: "POST",
-      body: JSON.stringify({ email, invite_code }),
+      body: JSON.stringify({ email, invite_code: invite_code || null }),
     });
   }
 
@@ -48,11 +48,11 @@ class ApiClient {
     code: string;
     password: string;
     name: string;
-    invite_code: string;
+    invite_code?: string;
   }) {
     return this.request<AuthResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, invite_code: data.invite_code || null }),
     });
   }
 
@@ -85,9 +85,78 @@ class ApiClient {
     return this.request<UserCredits>("/auth/me/credits");
   }
 
+  async checkin() {
+    return this.request<CheckinResponse>("/auth/me/checkin", {
+      method: "POST",
+    });
+  }
+
   // News
   async getPromptExamples() {
     return this.request<{ examples: PromptExample[] }>("/news/prompt-examples");
+  }
+
+  // History
+  async getChatSessions(params?: { starred?: boolean; search?: string; limit?: number; offset?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.starred) searchParams.set("starred", "true");
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.limit) searchParams.set("limit", params.limit.toString());
+    if (params?.offset) searchParams.set("offset", params.offset.toString());
+    const query = searchParams.toString();
+    return this.request<ChatSessionListResponse>(`/history${query ? `?${query}` : ""}`);
+  }
+
+  async createChatSession(title: string, preview?: string) {
+    return this.request<ChatSession>("/history", {
+      method: "POST",
+      body: JSON.stringify({ title, preview }),
+    });
+  }
+
+  async getChatSession(sessionId: number) {
+    return this.request<ChatSession>(`/history/${sessionId}`);
+  }
+
+  async updateChatSession(sessionId: number, data: { title?: string; starred?: boolean }) {
+    return this.request<ChatSession>(`/history/${sessionId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteChatSession(sessionId: number) {
+    return this.request<{ success: boolean }>(`/history/${sessionId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getChatMessages(sessionId: number) {
+    return this.request<ChatMessageListResponse>(`/history/${sessionId}/messages`);
+  }
+
+  async addChatMessage(sessionId: number, role: string, content: string, toolCalls?: string) {
+    return this.request<ChatMessageListResponse>(`/history/${sessionId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ role, content, tool_calls: toolCalls }),
+    });
+  }
+
+  // Share
+  async shareSession(sessionId: number) {
+    return this.request<ShareResponse>(`/history/${sessionId}/share`, {
+      method: "POST",
+    });
+  }
+
+  async unshareSession(sessionId: number) {
+    return this.request<{ success: boolean }>(`/history/${sessionId}/share`, {
+      method: "DELETE",
+    });
+  }
+
+  async getSharedSession(shareToken: string) {
+    return this.request<SharedSession>(`/history/shared/${shareToken}`);
   }
 
   // Chat Stream (uses dedicated API route to avoid buffering)

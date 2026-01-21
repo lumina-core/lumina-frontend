@@ -33,7 +33,8 @@ export function Sidebar({ className }: SidebarProps) {
 
   const handleNewChat = () => {
     clearMessages();
-    router.push("/chat");
+    // 使用 replace 避免留下历史记录
+    router.replace("/chat");
     setIsMobileOpen(false);
   };
 
