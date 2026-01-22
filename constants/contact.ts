@@ -34,6 +34,14 @@ export const CONTACT_CHANNELS: ContactChannel[] = [
     image: "/images/qrcode-qq.JPG",
     description: "扫描二维码添加 QQ",
   },
+  {
+    id: "qq-group",
+    name: "QQ群",
+    type: "qrcode",
+    icon: MessageCircle,
+    image: "/images/qrcode-qq-group.png",
+    description: "扫描二维码加入 QQ 群",
+  },
   // 示例：添加更多联系方式
   // {
   //   id: "wechat",
