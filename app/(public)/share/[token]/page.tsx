@@ -10,6 +10,7 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 import { SkeletonCard } from "@/components/ui";
 import { ArrowLeft, Calendar, Sparkles, AlertCircle, Copy, Check } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/stores/authStore";
 import type { SharedSession, ChatHistoryMessage } from "@/types";
 
 function SharedMessageItem({ message }: { message: ChatHistoryMessage }) {
@@ -136,6 +137,7 @@ export default function SharePage() {
   const [session, setSession] = useState<SharedSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     if (!token) return;
@@ -213,7 +215,7 @@ export default function SharePage() {
                   想要开始自己的对话？
                 </p>
                 <Link
-                  href="/login"
+                  href={isAuthenticated ? "/chat" : "/login"}
                   className="inline-flex items-center justify-center h-10 px-6 text-sm font-medium rounded-lg bg-brand-primary text-white hover:bg-brand-hover transition-colors"
                 >
                   立即体验 Lumina

@@ -168,3 +168,28 @@ export interface SubmitExampleResponse {
   message: string;
   submission_id: number | null;
 }
+
+// 邀请码相关类型
+export interface MyInviteCode {
+  code: string;
+  use_count: number;
+  invite_url: string;
+}
+
+export interface InviteStats {
+  total_invited: number;
+  total_reward_earned: number;
+}
+
+export interface Invitee {
+  id: number;
+  email: string;
+  name: string | null;
+  reward_earned: number;
+  invited_at: string;
+}
+
+export interface InviteListResponse {
+  invitees: Invitee[];
+  total: number;
+}

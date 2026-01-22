@@ -21,6 +21,7 @@ import {
   User,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/stores/authStore";
 import type { FeaturedExample } from "@/types";
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -34,6 +35,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 
 export default function ExamplesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { isAuthenticated } = useAuthStore();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["featuredExamples", selectedCategory],
@@ -186,7 +188,7 @@ export default function ExamplesPage() {
               想要开始自己的对话？
             </p>
             <Link
-              href="/login"
+              href={isAuthenticated ? "/chat" : "/login"}
               className="inline-flex items-center justify-center h-10 px-6 text-sm font-medium rounded-lg bg-brand-primary text-white hover:bg-brand-hover transition-colors"
             >
               立即体验 Lumina

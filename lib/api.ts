@@ -1,4 +1,4 @@
-import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, CheckinResponse, ShareResponse, SharedSession, FeaturedExamplesResponse, ExampleSubmissionListResponse, SubmitExampleResponse } from "@/types";
+import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, CheckinResponse, ShareResponse, SharedSession, FeaturedExamplesResponse, ExampleSubmissionListResponse, SubmitExampleResponse, MyInviteCode, InviteStats, InviteListResponse } from "@/types";
 
 const API_BASE = "/api/v1";
 
@@ -89,6 +89,19 @@ class ApiClient {
     return this.request<CheckinResponse>("/auth/me/checkin", {
       method: "POST",
     });
+  }
+
+  // Invite
+  async getMyInviteCode() {
+    return this.request<MyInviteCode>("/auth/me/invite-code");
+  }
+
+  async getInviteStats() {
+    return this.request<InviteStats>("/auth/me/invite-stats");
+  }
+
+  async getInvitees(limit = 20, offset = 0) {
+    return this.request<InviteListResponse>(`/auth/me/invitees?limit=${limit}&offset=${offset}`);
   }
 
   // News

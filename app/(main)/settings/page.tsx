@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { Button, Input, Card } from "@/components/ui";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
-import { User, Lock, Coins, ArrowLeft, Gift, CheckCircle } from "lucide-react";
+import { User, Lock, Coins, ArrowLeft, Gift, CheckCircle, Users, Copy, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import type { MyInviteCode, InviteStats } from "@/types";
 
 const profileSchema = z.object({
   name: z.string().min(1, "请输入昵称"),
@@ -35,6 +36,46 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [checkinMessage, setCheckinMessage] = useState("");
   const [error, setError] = useState("");
+
+  // 邀请码相关状态
+  const [inviteCode, setInviteCode] = useState<MyInviteCode | null>(null);
+  const [inviteStats, setInviteStats] = useState<InviteStats | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  useEffect(() => {
+    const fetchInviteData = async () => {
+      try {
+        const [codeData, statsData] = await Promise.all([
+          api.getMyInviteCode(),
+          api.getInviteStats(),
+        ]);
+        setInviteCode(codeData);
+        setInviteStats(statsData);
+      } catch (err) {
+        console.error("Failed to fetch invite data:", err);
+      }
+    };
+    fetchInviteData();
+  }, []);
+
+  const handleCopyInviteCode = async () => {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode.code);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch {
+      // fallback
+      const input = document.createElement("input");
+      input.value = inviteCode.code;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
 
   const handleCheckin = async () => {
     setIsCheckinLoading(true);
@@ -165,6 +206,67 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+        </Card>
+
+        {/* Invite Code Section */}
+        <Card className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
+              <Users className="w-5 h-5 text-success" />
+            </div>
+            <div>
+              <h2 className="font-medium">邀请好友</h2>
+              <p className="text-sm text-text-tertiary">
+                邀请好友注册，双方各得积分奖励
+              </p>
+            </div>
+          </div>
+
+          {inviteCode && (
+            <>
+              {/* 邀请码展示 */}
+              <div className="mb-4 p-4 rounded-lg bg-bg-tertiary">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-text-tertiary">我的邀请码</span>
+                  <button
+                    onClick={handleCopyInviteCode}
+                    className="flex items-center gap-1 text-sm text-brand-primary hover:text-brand-primary/80 transition-colors"
+                  >
+                    {copySuccess ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        已复制
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        复制邀请码
+                      </>
+                    )}
+                  </button>
+                </div>
+                <p className="text-xl font-mono font-semibold tracking-wider">
+                  {inviteCode.code}
+                </p>
+              </div>
+
+              {/* 邀请统计 */}
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border-default">
+                <div className="text-center">
+                  <p className="text-2xl font-semibold text-success">
+                    {inviteStats?.total_invited || 0}
+                  </p>
+                  <p className="text-xs text-text-tertiary">已邀请人数</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-semibold text-warning">
+                    {inviteStats?.total_reward_earned?.toLocaleString() || 0}
+                  </p>
+                  <p className="text-xs text-text-tertiary">获得积分</p>
+                </div>
+              </div>
+            </>
+          )}
         </Card>
 
         {/* Profile Section */}

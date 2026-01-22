@@ -6,6 +6,19 @@ import { ArrowLeft, Sparkles, Wrench, Zap } from "lucide-react";
 
 const changelogs = [
   {
+    version: "0.5.0",
+    date: "2025-01-22",
+    type: "feature" as const,
+    title: "邀请系统与页面优化",
+    changes: [
+      "设置页面新增邀请码展示与复制功能",
+      "新增邀请统计：已邀请人数、获得积分",
+      "示例页面和分享页面根据登录状态智能跳转",
+      "定价页面改版：功能规划中提示",
+      "新增邀请码相关 API 接口与类型定义",
+    ],
+  },
+  {
     version: "0.4.0",
     date: "2025-01-21",
     type: "feature" as const,
