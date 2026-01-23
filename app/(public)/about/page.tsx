@@ -77,36 +77,32 @@ export default function AboutPage() {
         </div>
       </main>
 
-      {/* 大图弹窗 */}
+      {/* Lightbox 全屏预览 */}
       {selectedChannel && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 cursor-pointer animate-in fade-in duration-200"
           onClick={() => setSelectedChannel(null)}
         >
-          <div
-            className="relative bg-bg-secondary rounded-xl p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            onClick={() => setSelectedChannel(null)}
+            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
           >
-            <button
-              onClick={() => setSelectedChannel(null)}
-              className="absolute top-3 right-3 p-1 rounded-lg hover:bg-bg-tertiary transition-colors"
-            >
-              <X className="w-5 h-5 text-text-tertiary" />
-            </button>
-            <div className="text-center">
-              <p className="text-text-primary font-medium mb-4">
-                {selectedChannel.description || selectedChannel.name}
-              </p>
-              {selectedChannel.image && (
-                <Image
-                  src={selectedChannel.image}
-                  alt={selectedChannel.name}
-                  width={240}
-                  height={240}
-                  className="rounded-lg"
-                />
-              )}
-            </div>
+            <X className="w-6 h-6 text-white" />
+          </button>
+          <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
+            <p className="text-white/90 font-medium text-lg">
+              {selectedChannel.description || selectedChannel.name}
+            </p>
+            {selectedChannel.image && (
+              <Image
+                src={selectedChannel.image}
+                alt={selectedChannel.name}
+                width={320}
+                height={320}
+                className="rounded-xl shadow-2xl"
+              />
+            )}
+            <p className="text-white/50 text-sm">点击任意位置关闭</p>
           </div>
         </div>
       )}
