@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
 import {
   historyMessageToMessage,
@@ -13,6 +14,7 @@ import type { SSEEvent, ChatSession } from "@/types";
 
 export function useChat() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const {
     messages,
     isStreaming,
@@ -68,9 +70,10 @@ export function useChat() {
     async (title: string, preview?: string): Promise<ChatSession> => {
       const session = await api.createChatSession(title, preview);
       setCurrentSession(session);
+      queryClient.invalidateQueries({ queryKey: ["chatSessions"] });
       return session;
     },
-    [setCurrentSession]
+    [queryClient, setCurrentSession]
   );
 
   // 开始新对话

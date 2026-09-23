@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     default: "Lumina - 新闻联播 Agent",
     template: "%s | Lumina",
   },
-  description: "从 2016 年至今的《新闻联播》原始文稿中检索事实、比较措辞与观察趋势。",
+  description: "追踪新闻联播数据的信号趋势，核验原文、比较措辞与观察变化。",
   keywords: ["AI", "新闻联播", "政策分析", "新闻检索", "Lumina"],
   authors: [{ name: "Lumina Team" }],
   creator: "Lumina",

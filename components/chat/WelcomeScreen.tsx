@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { PromptSignalStrip } from "@/components/chat/PromptSignalStrip";
 
 interface WelcomeScreenProps {
   onSend: (prompt: string) => void;
@@ -35,7 +36,7 @@ export function WelcomeScreen({
             读懂新闻联播里的信号
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-text-tertiary sm:text-[15px]">
-            从 2016 年至今的原始文稿中检索事实、比较措辞与观察趋势
+            追踪新闻联播数据的信号趋势，核验原文、比较措辞与观察变化
           </p>
         </div>
 
@@ -46,6 +47,8 @@ export function WelcomeScreen({
           variant="hero"
           autoFocus
         />
+
+        <PromptSignalStrip onSelect={onSend} disabled={disabled || isStreaming} />
 
         {inputNotice}
 
