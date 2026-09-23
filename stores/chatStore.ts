@@ -17,8 +17,8 @@ interface ChatState {
   
   addMessage: (message: Message) => void;
   appendTextToLastAssistant: (text: string) => void;
-  addToolCallToLastAssistant: (toolCall: Omit<ToolCall, "id">) => void;
-  updateToolCallStatus: (toolName: string, status: ToolCall["status"], output?: string) => void;
+  addToolCallToLastAssistant: (toolCall: Omit<ToolCall, "id"> & { id?: string }) => void;
+  updateToolCallStatus: (toolName: string, status: ToolCall["status"], output?: string, toolCallId?: string) => void;
   setIsStreaming: (isStreaming: boolean) => void;
   setLastUsage: (usage: ChatUsage | null) => void;
   setCurrentSession: (session: ChatSession | null) => void;
@@ -61,7 +61,7 @@ export const useChatStore = create<ChatState>((set) => ({
     set((state) => {
       const messages = [...state.messages];
       const lastIndex = messages.length - 1;
-      const id = generateToolCallId();
+      const id = toolCall.id || generateToolCallId();
       const fullToolCall: ToolCall = { ...toolCall, id };
       
       if (lastIndex >= 0 && messages[lastIndex].role === "assistant") {
@@ -79,7 +79,7 @@ export const useChatStore = create<ChatState>((set) => ({
     });
   },
 
-  updateToolCallStatus: (toolName, status, output) => {
+  updateToolCallStatus: (toolName, status, output, toolCallId) => {
     set((state) => {
       const messages = [...state.messages];
       const lastIndex = messages.length - 1;
@@ -88,7 +88,10 @@ export const useChatStore = create<ChatState>((set) => ({
       // Find and update the first running tool call with matching name
       let updatedId: string | null = null;
       for (const [id, tc] of activeToolCalls) {
-        if (tc.name === toolName && tc.status === "running") {
+        if (
+          tc.status === "running" &&
+          (toolCallId ? id === toolCallId : tc.name === toolName)
+        ) {
           activeToolCalls.set(id, { ...tc, status, output });
           updatedId = id;
           break;

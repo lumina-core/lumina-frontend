@@ -21,6 +21,7 @@ type OriginRequestInit = {
   method?: string;
   body?: string;
   headers?: Record<string, string>;
+  retry?: boolean;
 };
 
 function requestOnce(
@@ -94,16 +95,17 @@ export async function requestLuminaOrigin(
 ): Promise<LuminaOriginResponse> {
   let lastError: unknown;
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  const maxAttempts = init.retry === false ? 1 : 2;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     try {
       const response = await requestOnce(path, init);
-      if (!RETRYABLE_STATUS.has(response.status) || attempt === 1) {
+      if (!RETRYABLE_STATUS.has(response.status) || attempt === maxAttempts - 1) {
         return response;
       }
       lastError = new Error(`Lumina control returned ${response.status}`);
     } catch (error) {
       lastError = error;
-      if (attempt === 1) throw error;
+      if (attempt === maxAttempts - 1) throw error;
     }
     await new Promise((resolve) => setTimeout(resolve, 400));
   }

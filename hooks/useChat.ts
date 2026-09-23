@@ -3,9 +3,10 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
+import { historyMessageToMessage } from "@/lib/chat/history";
 import { useChatStore } from "@/stores/chatStore";
 import { useAuthStore } from "@/stores/authStore";
-import type { SSEEvent, Message, ChatSession, ChatHistoryMessage } from "@/types";
+import type { SSEEvent, ChatSession } from "@/types";
 
 export function useChat() {
   const router = useRouter();
@@ -33,29 +34,9 @@ export function useChat() {
     setUser,
   } = useAuthStore();
 
-  const getHistoryContent = (msgs: Message[]) => {
-    return msgs.map((m) => {
-      const textContent = m.parts
-        .filter((p) => p.type === "text")
-        .map((p) => (p as { type: "text"; content: string }).content)
-        .join("");
-      return { role: m.role, content: textContent };
-    });
-  };
-
-
-
-  // 将历史消息转换为前端 Message 格式
-  const convertHistoryMessages = (historyMessages: ChatHistoryMessage[]): Message[] => {
-    return historyMessages.map((m) => ({
-      role: m.role as "user" | "assistant",
-      parts: [{ type: "text" as const, content: m.content }],
-    }));
-  };
-
   // 加载历史会话
   const loadSession = useCallback(
-    async (sessionId: number) => {
+    async (sessionId: string) => {
       try {
         const [session, messagesRes] = await Promise.all([
           api.getChatSession(sessionId),
@@ -63,7 +44,7 @@ export function useChat() {
         ]);
         
         setCurrentSession(session);
-        setMessages(convertHistoryMessages(messagesRes.items));
+        setMessages(messagesRes.items.map(historyMessageToMessage));
         
         return session;
       } catch (error) {
@@ -107,41 +88,49 @@ export function useChat() {
           // 用用户输入的前50个字符作为标题
           const title = query.slice(0, 50) + (query.length > 50 ? "..." : "");
           session = await createSession(title, query.slice(0, 200));
+          window.history.replaceState(
+            null,
+            "",
+            `/chat/${encodeURIComponent(session.id)}`,
+          );
         } catch (error) {
           console.error("Failed to create session:", error);
-          // 继续对话，即使创建会话失败
+          const message = error instanceof Error ? error.message : "会话创建失败";
+          addMessage({
+            id: crypto.randomUUID(),
+            role: "assistant",
+            parts: [{ type: "text", content: `暂时无法创建会话：${message}` }],
+          });
+          return;
         }
       }
 
-      // Add user message
-      addMessage({ role: "user", parts: [{ type: "text", content: query }] });
+      if (!session) return;
 
-      // 保存用户消息到数据库
-      if (session) {
-        api.addChatMessage(session.id, "user", query).catch(console.error);
-      }
+      // Add user message
+      addMessage({
+        id: crypto.randomUUID(),
+        role: "user",
+        parts: [{ type: "text", content: query }],
+      });
 
       // Add empty assistant message
-      addMessage({ role: "assistant", parts: [] });
+      addMessage({ id: crypto.randomUUID(), role: "assistant", parts: [] });
 
       setIsStreaming(true);
 
-      let assistantResponse = "";
-
       try {
-        const history = getHistoryContent(messages);
-
-        for await (const event of api.chatStream(query, history)) {
+        for await (const event of api.chatStream(query, session.id)) {
           const e = event as SSEEvent;
 
           switch (e.type) {
             case "token":
               appendTextToLastAssistant(e.content || "");
-              assistantResponse += e.content || "";
               break;
 
             case "tool_start":
               addToolCallToLastAssistant({
+                id: e.tool_call_id,
                 name: e.name || "",
                 input: e.input || {},
                 status: "running",
@@ -149,7 +138,12 @@ export function useChat() {
               break;
 
             case "tool_end":
-              updateToolCallStatus(e.name || "", "completed", e.output);
+              updateToolCallStatus(
+                e.name || "",
+                "completed",
+                e.output,
+                e.tool_call_id,
+              );
               break;
 
             case "usage":
@@ -171,11 +165,6 @@ export function useChat() {
               break;
           }
         }
-
-        // 保存助手消息到数据库
-        if (session && assistantResponse) {
-          api.addChatMessage(session.id, "assistant", assistantResponse).catch(console.error);
-        }
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
           setUser(null);
@@ -186,13 +175,12 @@ export function useChat() {
           await fetchCredits();
         }
         const errorMessage = error instanceof Error ? error.message : "发送失败";
-        appendTextToLastAssistant(`抱歉，发生了错误：${errorMessage}`);
+        appendTextToLastAssistant(`\n\n抱歉，发生了错误：${errorMessage}`);
       } finally {
         setIsStreaming(false);
       }
     },
     [
-      messages,
       isStreaming,
       currentSession,
       isAuthenticated,

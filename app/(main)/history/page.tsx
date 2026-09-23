@@ -16,21 +16,16 @@ import {
   Share2,
   Link as LinkIcon,
   Check,
-  Sparkles,
 } from "lucide-react";
-import { SubmitExampleModal } from "@/components/chat/SubmitExampleModal";
-import { useAuthStore } from "@/stores/authStore";
 
 type FilterType = "all" | "starred";
 
 export default function HistoryPage() {
   const router = useRouter();
-  const user = useAuthStore((state) => state.user);
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [copiedId, setCopiedId] = useState<number | null>(null);
-  const [submitModalSession, setSubmitModalSession] = useState<ChatSession | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Debounce search
@@ -48,7 +43,7 @@ export default function HistoryPage() {
   });
 
   const toggleStarMutation = useMutation({
-    mutationFn: ({ id, starred }: { id: number; starred: boolean }) =>
+    mutationFn: ({ id, starred }: { id: string; starred: boolean }) =>
       api.updateChatSession(id, { starred }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chatSessions"] });
@@ -56,21 +51,21 @@ export default function HistoryPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.deleteChatSession(id),
+    mutationFn: (id: string) => api.deleteChatSession(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chatSessions"] });
     },
   });
 
   const shareMutation = useMutation({
-    mutationFn: (id: number) => api.shareSession(id),
+    mutationFn: (id: string) => api.shareSession(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chatSessions"] });
     },
   });
 
   const unshareMutation = useMutation({
-    mutationFn: (id: number) => api.unshareSession(id),
+    mutationFn: (id: string) => api.unshareSession(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chatSessions"] });
     },
@@ -80,7 +75,7 @@ export default function HistoryPage() {
     toggleStarMutation.mutate({ id: session.id, starred: !session.starred });
   }, [toggleStarMutation]);
 
-  const deleteItem = useCallback((id: number) => {
+  const deleteItem = useCallback((id: string) => {
     if (confirm("确定要删除这个对话吗？")) {
       deleteMutation.mutate(id);
     }
@@ -105,14 +100,14 @@ export default function HistoryPage() {
     }
   }, [shareMutation, buildShareUrl]);
 
-  const handleUnshare = useCallback((id: number) => {
+  const handleUnshare = useCallback((id: string) => {
     if (confirm("确定要取消分享吗？取消后链接将失效。")) {
       unshareMutation.mutate(id);
     }
   }, [unshareMutation]);
 
-  const openSession = useCallback((sessionId: number) => {
-    router.push(`/chat?session=${sessionId}`);
+  const openSession = useCallback((sessionId: string) => {
+    router.push(`/chat/${encodeURIComponent(sessionId)}`);
   }, [router]);
 
   const formatDate = (dateStr: string) => {
@@ -236,16 +231,6 @@ export default function HistoryPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSubmitModalSession(item);
-                      }}
-                      className="p-2 rounded-lg hover:bg-bg-tertiary transition-colors"
-                      title="提交为使用示例"
-                    >
-                      <Sparkles className="w-4 h-4 text-text-tertiary hover:text-brand-primary" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
                         handleShare(item);
                       }}
                       disabled={shareMutation.isPending}
@@ -307,15 +292,6 @@ export default function HistoryPage() {
           </motion.div>
         )}
       </div>
-
-      {/* Submit Example Modal */}
-      <SubmitExampleModal
-        isOpen={!!submitModalSession}
-        onClose={() => setSubmitModalSession(null)}
-        sessionId={submitModalSession?.id ?? 0}
-        sessionTitle={submitModalSession?.title ?? ""}
-        defaultDisplayName={user?.name || user?.email?.split("@")[0] || ""}
-      />
     </div>
   );
 }

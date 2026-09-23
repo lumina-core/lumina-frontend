@@ -1,4 +1,4 @@
-import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, ChatHistoryMessage, CheckinResponse, ShareResponse, SharedSession, FeaturedExamplesResponse, ExampleSubmissionListResponse, SubmitExampleResponse, MyInviteCode, InviteStats, InviteListResponse } from "@/types";
+import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, CheckinResponse, ShareResponse, SharedSession, FeaturedExamplesResponse, ExampleSubmissionListResponse, SubmitExampleResponse, MyInviteCode, InviteStats, InviteListResponse } from "@/types";
 
 const API_BASE = "/api/v1";
 
@@ -161,42 +161,35 @@ class ApiClient {
     });
   }
 
-  async getChatSession(sessionId: number) {
+  async getChatSession(sessionId: string) {
     return this.request<ChatSession>(`/history/${sessionId}`);
   }
 
-  async updateChatSession(sessionId: number, data: { title?: string; starred?: boolean }) {
+  async updateChatSession(sessionId: string, data: { title?: string; starred?: boolean }) {
     return this.request<ChatSession>(`/history/${sessionId}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
   }
 
-  async deleteChatSession(sessionId: number) {
+  async deleteChatSession(sessionId: string) {
     return this.request<{ success: boolean }>(`/history/${sessionId}`, {
       method: "DELETE",
     });
   }
 
-  async getChatMessages(sessionId: number) {
+  async getChatMessages(sessionId: string) {
     return this.request<ChatMessageListResponse>(`/history/${sessionId}/messages`);
   }
 
-  async addChatMessage(sessionId: number, role: string, content: string, toolCalls?: string) {
-    return this.request<ChatHistoryMessage>(`/history/${sessionId}/messages`, {
-      method: "POST",
-      body: JSON.stringify({ role, content, tool_calls: toolCalls }),
-    });
-  }
-
   // Share
-  async shareSession(sessionId: number) {
+  async shareSession(sessionId: string) {
     return this.request<ShareResponse>(`/history/${sessionId}/share`, {
       method: "POST",
     });
   }
 
-  async unshareSession(sessionId: number) {
+  async unshareSession(sessionId: string) {
     return this.request<{ success: boolean }>(`/history/${sessionId}/share`, {
       method: "DELETE",
     });
@@ -225,7 +218,7 @@ class ApiClient {
   }
 
   // Chat Stream (uses dedicated API route to avoid buffering)
-  async *chatStream(query: string, chat_history: { role: string; content: string }[]) {
+  async *chatStream(query: string, sessionId: string) {
     const res = await fetch("/api/chat/stream", {
       method: "POST",
       headers: {
@@ -233,7 +226,7 @@ class ApiClient {
       },
       body: JSON.stringify({
         query,
-        chat_history,
+        session_id: sessionId,
       }),
     });
 

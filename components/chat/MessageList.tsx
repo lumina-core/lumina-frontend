@@ -56,7 +56,7 @@ export function MessageList({
 
           return (
             <MessageItem
-              key={idx}
+              key={message.id}
               message={message}
               isStreaming={isLastAssistant && isStreaming}
             />

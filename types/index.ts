@@ -37,6 +37,7 @@ export type MessagePart =
   | { type: "tool_call"; toolCall: ToolCall };
 
 export interface Message {
+  id: string;
   role: "user" | "assistant";
   parts: MessagePart[];
 }
@@ -67,6 +68,7 @@ export type SSEEventType = "token" | "tool_start" | "tool_end" | "usage" | "done
 
 export interface SSEEvent {
   type: SSEEventType;
+  tool_call_id?: string;
   content?: string;
   name?: string;
   input?: Record<string, unknown>;
@@ -84,7 +86,7 @@ export interface PromptExample {
 }
 
 export interface ChatSession {
-  id: number;
+  id: string;
   title: string;
   preview: string | null;
   message_count: number;
@@ -104,15 +106,15 @@ export interface ShareResponse {
 }
 
 export interface SharedSession {
-  id: number;
+  id: string;
   title: string;
   created_at: string;
   messages: ChatHistoryMessage[];
 }
 
 export interface ChatHistoryMessage {
-  id: number;
-  session_id: number;
+  id: string;
+  session_id: string;
   role: "user" | "assistant";
   content: string;
   tool_calls: string | null;
