@@ -7,11 +7,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { Logo } from "@/components/Logo";
-import { Button, Input, Card } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import { api } from "@/lib/api";
-import { setToken } from "@/lib/auth";
 import { useAuthStore } from "@/stores/authStore";
-import { Mail, Lock, User, Ticket, KeyRound } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const step1Schema = z.object({
   invite_code: z.string().optional(),
@@ -24,7 +23,7 @@ const step2Schema = z.object({
 
 const step3Schema = z.object({
   name: z.string().min(1, "请输入昵称"),
-  password: z.string().min(6, "密码至少6位"),
+  password: z.string().min(8, "密码至少8位"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "两次密码不一致",
@@ -91,7 +90,6 @@ export default function RegisterPage() {
         name: data.name,
         invite_code: formData.invite_code,
       });
-      setToken(res.access_token);
       setUser(res.user);
       router.push("/chat");
     } catch (err) {
@@ -101,147 +99,146 @@ export default function RegisterPage() {
     }
   };
 
+  const inputClassName = "border-border-default bg-bg-secondary";
+
   return (
-    <Card className="p-8">
-      <div className="flex flex-col items-center mb-8">
-        <Logo size="lg" />
-        <p className="mt-2 text-text-secondary">创建账号</p>
+    <div>
+      <div className="mb-8 flex flex-col items-center">
+        <Logo href="/chat" size="md" />
+        <h1 className="mt-8 text-2xl font-medium tracking-[-0.02em] text-text-primary">创建账号</h1>
+        <p className="mt-2 text-sm text-text-tertiary">使用邮箱注册，完成后即可获得积分</p>
       </div>
 
-      {/* Step Indicator */}
-      <div className="flex items-center justify-center gap-2 mb-8">
-        {[1, 2, 3].map((s) => (
-          <div
-            key={s}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              s === step ? "bg-brand-primary" : s < step ? "bg-success" : "bg-border-default"
-            }`}
+      <div className="mb-7 flex items-center gap-2" aria-label={`注册步骤 ${step} / 3`}>
+        {[1, 2, 3].map((item) => (
+          <span
+            key={item}
+            className={cn(
+              "h-1 flex-1 rounded-full transition-colors",
+              item <= step ? "bg-brand-primary" : "bg-white/[0.08]"
+            )}
           />
         ))}
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-error/10 text-error text-sm">
+        <div className="mb-5 rounded-lg border border-error/20 bg-error/10 p-3 text-sm text-error">
           {error}
         </div>
       )}
 
-      {/* Step 1: Email & Optional Invite Code */}
       {step === 1 && (
-        <form onSubmit={step1Form.handleSubmit(handleStep1)} className="space-y-4">
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+        <form onSubmit={step1Form.handleSubmit(handleStep1)} className="space-y-5">
+          <label className="block">
+            <span className="mb-2 block text-xs font-medium text-text-secondary">邮箱</span>
             <Input
               {...step1Form.register("email")}
               type="email"
-              placeholder="邮箱"
-              className="pl-12"
+              autoComplete="email"
+              placeholder="you@example.com"
+              className={inputClassName}
               error={step1Form.formState.errors.email?.message}
             />
-          </div>
+          </label>
 
-          <div className="relative">
-            <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+          <label className="block">
+            <span className="mb-2 flex items-center gap-1.5 text-xs font-medium text-text-secondary">
+              邀请码 <span className="font-normal text-text-tertiary">可选</span>
+            </span>
             <Input
               {...step1Form.register("invite_code")}
-              placeholder="邀请码（可选，有邀请码可获得额外积分）"
-              className="pl-12"
+              placeholder="有邀请码可获得额外积分"
+              className={inputClassName}
             />
-          </div>
+          </label>
 
-          <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-            发送验证码
+          <Button type="submit" className="w-full bg-text-primary text-bg-primary hover:bg-white" size="lg" isLoading={isLoading}>
+            发送邮箱验证码
           </Button>
         </form>
       )}
 
-      {/* Step 2: Verification Code */}
       {step === 2 && (
-        <form onSubmit={step2Form.handleSubmit(handleStep2)} className="space-y-4">
-          <p className="text-center text-text-secondary text-sm mb-4">
-            验证码已发送至 <span className="text-text-primary">{formData.email}</span>
+        <form onSubmit={step2Form.handleSubmit(handleStep2)} className="space-y-5">
+          <p className="text-center text-sm leading-6 text-text-tertiary">
+            验证码已发送至<br />
+            <span className="text-text-primary">{formData.email}</span>
           </p>
-
-          <div className="relative">
-            <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
-            <Input
-              {...step2Form.register("code")}
-              placeholder="6位验证码"
-              maxLength={6}
-              className="pl-12 text-center tracking-widest"
-              error={step2Form.formState.errors.code?.message}
-            />
-          </div>
-
-          <Button type="submit" className="w-full" size="lg">
+          <Input
+            {...step2Form.register("code")}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="6 位验证码"
+            maxLength={6}
+            className={`${inputClassName} text-center font-mono tracking-[0.32em]`}
+            error={step2Form.formState.errors.code?.message}
+          />
+          <Button type="submit" className="w-full bg-text-primary text-bg-primary hover:bg-white" size="lg">
             下一步
           </Button>
-
           <button
             type="button"
             onClick={() => setStep(1)}
-            className="w-full text-center text-text-tertiary text-sm hover:text-text-secondary"
+            className="w-full text-center text-sm text-text-tertiary transition-colors hover:text-text-secondary"
           >
-            返回上一步
+            返回修改邮箱
           </button>
         </form>
       )}
 
-      {/* Step 3: Set Password */}
       {step === 3 && (
-        <form onSubmit={step3Form.handleSubmit(handleStep3)} className="space-y-4">
-          <div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+        <form onSubmit={step3Form.handleSubmit(handleStep3)} className="space-y-5">
+          <label className="block">
+            <span className="mb-2 block text-xs font-medium text-text-secondary">昵称</span>
             <Input
               {...step3Form.register("name")}
-              placeholder="昵称"
-              className="pl-12"
+              autoComplete="name"
+              placeholder="怎么称呼你"
+              className={inputClassName}
               error={step3Form.formState.errors.name?.message}
             />
-          </div>
-
-          <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-xs font-medium text-text-secondary">密码</span>
             <Input
               {...step3Form.register("password")}
               type="password"
-              placeholder="设置密码"
-              className="pl-12"
+              autoComplete="new-password"
+              placeholder="至少 8 位"
+              className={inputClassName}
               error={step3Form.formState.errors.password?.message}
             />
-          </div>
-
-          <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-xs font-medium text-text-secondary">确认密码</span>
             <Input
               {...step3Form.register("confirmPassword")}
               type="password"
-              placeholder="确认密码"
-              className="pl-12"
+              autoComplete="new-password"
+              placeholder="再次输入密码"
+              className={inputClassName}
               error={step3Form.formState.errors.confirmPassword?.message}
             />
-          </div>
-
-          <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
+          </label>
+          <Button type="submit" className="w-full bg-text-primary text-bg-primary hover:bg-white" size="lg" isLoading={isLoading}>
             完成注册
           </Button>
-
           <button
             type="button"
             onClick={() => setStep(2)}
-            className="w-full text-center text-text-tertiary text-sm hover:text-text-secondary"
+            className="w-full text-center text-sm text-text-tertiary transition-colors hover:text-text-secondary"
           >
             返回上一步
           </button>
         </form>
       )}
 
-      <p className="mt-6 text-center text-text-secondary text-sm">
+      <p className="mt-7 text-center text-sm text-text-secondary">
         已有账号？
-        <Link href="/login" className="text-brand-primary hover:text-brand-hover ml-1">
-          立即登录
+        <Link href="/login" className="ml-1 text-brand-primary hover:text-brand-hover">
+          登录
         </Link>
       </p>
-    </Card>
+    </div>
   );
 }

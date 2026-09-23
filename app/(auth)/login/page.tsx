@@ -7,9 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { Logo } from "@/components/Logo";
-import { Button, Input, Card } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import { useAuthStore } from "@/stores/authStore";
-import { Mail, Lock } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.email("请输入有效的邮箱地址"),
@@ -47,52 +46,55 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="p-8">
-      <div className="flex flex-col items-center mb-8">
-        <Logo size="lg" />
-        <p className="mt-2 text-text-secondary">AI 新闻分析助手</p>
+    <div>
+      <div className="mb-10 flex flex-col items-center">
+        <Logo href="/chat" size="md" />
+        <h1 className="mt-9 text-2xl font-medium tracking-[-0.02em] text-text-primary">欢迎回来</h1>
+        <p className="mt-2 text-sm text-text-tertiary">使用邮箱登录 Lumina</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {error && (
           <div className="p-3 rounded-lg bg-error/10 text-error text-sm">
             {error}
           </div>
         )}
 
-        <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+        <label className="block">
+          <span className="mb-2 block text-xs font-medium text-text-secondary">邮箱</span>
           <Input
             {...register("email")}
             type="email"
-            placeholder="邮箱"
-            className="pl-12"
+            autoComplete="email"
+            placeholder="you@example.com"
+            className="border-border-default bg-bg-secondary"
             error={errors.email?.message}
           />
-        </div>
+        </label>
 
-        <div className="relative">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+        <label className="block">
+          <span className="mb-2 block text-xs font-medium text-text-secondary">密码</span>
           <Input
             {...register("password")}
             type="password"
-            placeholder="密码"
-            className="pl-12"
+            autoComplete="current-password"
+            placeholder="输入密码"
+            className="border-border-default bg-bg-secondary"
             error={errors.password?.message}
           />
-        </div>
+        </label>
 
-        <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-          登 录
+        <Button type="submit" className="w-full bg-text-primary text-bg-primary hover:bg-white" size="lg" isLoading={isLoading}>
+          登录
         </Button>
       </form>
 
       <p className="mt-6 text-center text-text-secondary text-sm">
         还没有账号？
         <Link href="/register" className="text-brand-primary hover:text-brand-hover ml-1">
-          立即注册
+          使用邮箱注册
         </Link>
       </p>
-    </Card>
+    </div>
   );
 }

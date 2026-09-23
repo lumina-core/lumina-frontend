@@ -7,10 +7,11 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
   async rewrites() {
-    const apiUrl = process.env.BACKEND_URL || "http://localhost:8000";
+    const apiUrl = process.env.BACKEND_URL;
+    if (!apiUrl) return [];
     return [
       {
-        source: "/api/:path*",
+        source: "/api/v1/:path*",
         destination: `${apiUrl}/api/:path*`,
       },
     ];

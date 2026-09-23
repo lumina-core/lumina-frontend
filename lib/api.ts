@@ -1,18 +1,21 @@
-import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, CheckinResponse, ShareResponse, SharedSession, FeaturedExamplesResponse, ExampleSubmissionListResponse, SubmitExampleResponse, MyInviteCode, InviteStats, InviteListResponse } from "@/types";
+import type { AuthResponse, User, UserCredits, PromptExample, ChatSession, ChatSessionListResponse, ChatMessageListResponse, ChatHistoryMessage, CheckinResponse, ShareResponse, SharedSession, FeaturedExamplesResponse, ExampleSubmissionListResponse, SubmitExampleResponse, MyInviteCode, InviteStats, InviteListResponse } from "@/types";
 
 const API_BASE = "/api/v1";
 
-class ApiClient {
-  private getToken(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("access_token");
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
   }
+}
 
+class ApiClient {
   private getHeaders(): HeadersInit {
-    const token = this.getToken();
     return {
       "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
 
@@ -23,13 +26,14 @@ class ApiClient {
     });
 
     if (!res.ok) {
-      if (res.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
-        throw new Error("Unauthorized");
-      }
       const error = await res.json().catch(() => ({ detail: "请求失败" }));
-      throw new Error(error.detail || "请求失败");
+      const message =
+        typeof error.detail === "string"
+          ? error.detail
+          : typeof error.error?.message === "string"
+            ? error.error.message
+            : "请求失败";
+      throw new ApiError(message, res.status);
     }
 
     return res.json();
@@ -63,13 +67,19 @@ class ApiClient {
     });
   }
 
+  async logout() {
+    return this.request<{ success: boolean }>("/auth/logout", {
+      method: "POST",
+    });
+  }
+
   async getMe() {
     return this.request<User>("/auth/me");
   }
 
   async updateMe(name: string) {
     return this.request<User>("/auth/me", {
-      method: "PUT",
+      method: "PATCH",
       body: JSON.stringify({ name }),
     });
   }
@@ -77,31 +87,31 @@ class ApiClient {
   async changePassword(old_password: string, new_password: string) {
     return this.request<{ success: boolean }>("/auth/change-password", {
       method: "POST",
-      body: JSON.stringify({ old_password, new_password }),
+      body: JSON.stringify({ current_password: old_password, new_password }),
     });
   }
 
   async getCredits() {
-    return this.request<UserCredits>("/auth/me/credits");
+    return this.request<UserCredits>("/credits/balance");
   }
 
   async checkin() {
-    return this.request<CheckinResponse>("/auth/me/checkin", {
+    return this.request<CheckinResponse>("/credits/checkin", {
       method: "POST",
     });
   }
 
   // Invite
   async getMyInviteCode() {
-    return this.request<MyInviteCode>("/auth/me/invite-code");
+    return this.request<MyInviteCode>("/invites/me");
   }
 
   async getInviteStats() {
-    return this.request<InviteStats>("/auth/me/invite-stats");
+    return this.request<InviteStats>("/invites/stats");
   }
 
   async getInvitees(limit = 20, offset = 0) {
-    return this.request<InviteListResponse>(`/auth/me/invitees?limit=${limit}&offset=${offset}`);
+    return this.request<InviteListResponse>(`/invites?limit=${limit}&offset=${offset}`);
   }
 
   // News
@@ -149,7 +159,7 @@ class ApiClient {
   }
 
   async addChatMessage(sessionId: number, role: string, content: string, toolCalls?: string) {
-    return this.request<ChatMessageListResponse>(`/history/${sessionId}/messages`, {
+    return this.request<ChatHistoryMessage>(`/history/${sessionId}/messages`, {
       method: "POST",
       body: JSON.stringify({ role, content, tool_calls: toolCalls }),
     });
@@ -192,23 +202,23 @@ class ApiClient {
 
   // Chat Stream (uses dedicated API route to avoid buffering)
   async *chatStream(query: string, chat_history: { role: string; content: string }[]) {
-    const token = this.getToken();
     const res = await fetch("/api/chat/stream", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
       },
-      body: JSON.stringify({ query, chat_history }),
+      body: JSON.stringify({
+        query,
+        chat_history,
+      }),
     });
 
     if (!res.ok) {
-      if (res.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
-      }
       const error = await res.json().catch(() => ({ detail: "请求失败" }));
-      throw new Error(error.detail || "请求失败");
+      throw new ApiError(
+        typeof error.detail === "string" ? error.detail : "请求失败",
+        res.status,
+      );
     }
 
     const reader = res.body?.getReader();

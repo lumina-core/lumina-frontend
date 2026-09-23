@@ -8,11 +8,14 @@ import { MessageList } from "@/components/chat/MessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { WelcomeScreen } from "@/components/chat/WelcomeScreen";
 import { UsageDisplay } from "@/components/chat/UsageDisplay";
+import { CreditGateNotice } from "@/components/chat/CreditGateNotice";
 import { SkeletonCard } from "@/components/ui";
+import { useAuthStore } from "@/stores/authStore";
 
 function ChatContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session");
+  const credits = useAuthStore((state) => state.credits);
 
   const {
     messages,
@@ -48,6 +51,8 @@ function ChatContent() {
   }, [sessionId, currentSession]);
 
   const hasMessages = messages.length > 0;
+  const inputDisabled = !credits?.can_use;
+  const creditNotice = <CreditGateNotice credits={credits} />;
 
   if (isLoadingSession) {
     return (
@@ -80,27 +85,33 @@ function ChatContent() {
   return (
     <div className="flex-1 flex flex-col h-full">
       {hasMessages ? (
-        <MessageList
-          messages={messages}
-          isStreaming={isStreaming}
-        />
-      ) : (
-        <WelcomeScreen onSelectPrompt={sendMessage} />
-      )}
-
-      {/* Usage Display */}
-      {lastUsage && !isStreaming && <UsageDisplay usage={lastUsage} />}
-
-      {/* Input Area */}
-      <div className="p-4 border-t border-border-default">
-        <div className="max-w-3xl mx-auto">
-          <ChatInput
-            onSend={sendMessage}
-            disabled={false}
+        <>
+          <MessageList
+            messages={messages}
             isStreaming={isStreaming}
           />
-        </div>
-      </div>
+
+          {lastUsage && !isStreaming && <UsageDisplay usage={lastUsage} />}
+
+          <div className="border-t border-white/[0.06] bg-bg-primary/90 px-4 pb-4 pt-3 backdrop-blur-xl sm:px-6 sm:pb-5">
+            <div className="mx-auto max-w-[760px]">
+              <ChatInput
+                onSend={sendMessage}
+                disabled={inputDisabled}
+                isStreaming={isStreaming}
+              />
+              {creditNotice}
+            </div>
+          </div>
+        </>
+      ) : (
+        <WelcomeScreen
+          onSend={sendMessage}
+          isStreaming={isStreaming}
+          disabled={inputDisabled}
+          inputNotice={creditNotice}
+        />
+      )}
     </div>
   );
 }

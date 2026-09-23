@@ -2,21 +2,21 @@
 
 :root {
   /* 背景层次 */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #141414;
-  --bg-tertiary: #1f1f1f;
-  --bg-elevated: #262626;
+  --bg-primary: #0c0d0f;
+  --bg-secondary: #131417;
+  --bg-tertiary: #191a1e;
+  --bg-elevated: #22242a;
 
   /* 文字层次 */
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-tertiary: #71717a;
-  --text-disabled: #3f3f46;
+  --text-primary: #f1f1f2;
+  --text-secondary: #a4a6ad;
+  --text-tertiary: #73767f;
+  --text-disabled: #454851;
 
   /* 品牌色 */
-  --brand-primary: #6366f1;
-  --brand-hover: #818cf8;
-  --brand-active: #4f46e5;
+  --brand-primary: #7c6fff;
+  --brand-hover: #9a90ff;
+  --brand-active: #6759ec;
 
   /* 功能色 */
   --success: #22c55e;
@@ -25,8 +25,8 @@
   --info: #3b82f6;
 
   /* 边框 */
-  --border-default: #27272a;
-  --border-hover: #3f3f46;
+  --border-default: #292b31;
+  --border-hover: #41444d;
 
   /* 阴影 */
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
@@ -55,8 +55,8 @@
   --color-border-default: var(--border-default);
   --color-border-hover: var(--border-hover);
 
-  --font-sans: var(--font-geist-sans), "Inter", "SF Pro Display", -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: "SF Pro Display", "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "SFMono-Regular", "JetBrains Mono", "Fira Code", Consolas, monospace;
 
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -86,9 +86,11 @@
 }
 
 body {
+  min-height: 100vh;
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {

@@ -7,7 +7,6 @@ export interface User {
 }
 
 export interface AuthResponse {
-  access_token: string;
   token_type: string;
   expires_in: number;
   user: User;
@@ -22,6 +21,7 @@ export interface UserCredits {
   can_use: boolean;
   last_checkin_date: string | null;
   checked_in_today: boolean;
+  streak_days: number;
 }
 
 export interface CheckinResponse {
@@ -59,8 +59,8 @@ export interface AggregatedToolCall {
 export interface ChatUsage {
   input_tokens: number;
   output_tokens: number;
-  credits_deducted: number;
-  credits_remaining: number;
+  credits_deducted?: number;
+  credits_remaining?: number;
 }
 
 export type SSEEventType = "token" | "tool_start" | "tool_end" | "usage" | "done" | "error";

@@ -1,123 +1,57 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Logo } from "@/components/Logo";
-import { api } from "@/lib/api";
-import { TrendingUp, Building2, Users, FileText } from "lucide-react";
-import type { PromptExample } from "@/types";
+import type { ReactNode } from "react";
+import { ChatInput } from "@/components/chat/ChatInput";
 
 interface WelcomeScreenProps {
-  onSelectPrompt: (prompt: string) => void;
+  onSend: (prompt: string) => void;
+  isStreaming?: boolean;
+  disabled?: boolean;
+  inputNotice?: ReactNode;
 }
 
-const categoryIcons: Record<string, React.ReactNode> = {
-  投资视角: <TrendingUp className="w-5 h-5" />,
-  行业研究: <Building2 className="w-5 h-5" />,
-  企业决策: <Users className="w-5 h-5" />,
-  政策解读: <FileText className="w-5 h-5" />,
-};
-
-const defaultExamples: PromptExample[] = [
-  {
-    category: "投资视角",
-    prompts: [
-      "最近有哪些关于新能源汽车的重要新闻？",
-      "AI芯片领域有什么最新动态？",
-    ],
-  },
-  {
-    category: "行业研究",
-    prompts: [
-      "分析一下低空经济的发展趋势",
-      "梳理近期半导体产业链的变化",
-    ],
-  },
-  {
-    category: "企业决策",
-    prompts: [
-      "搜索头部科技公司的最新战略动向",
-      "有哪些行业并购重组的新闻？",
-    ],
-  },
-  {
-    category: "政策解读",
-    prompts: [
-      "近期有哪些重要的产业政策发布？",
-      "解读最新的金融监管政策",
-    ],
-  },
-];
-
-export function WelcomeScreen({ onSelectPrompt }: WelcomeScreenProps) {
-  const [examples, setExamples] = useState<PromptExample[]>(defaultExamples);
-
-  useEffect(() => {
-    api.getPromptExamples().then((res) => {
-      if (res.examples?.length > 0) {
-        setExamples(res.examples);
-      }
-    }).catch(() => {
-      // Use default examples
-    });
-  }, []);
-
+export function WelcomeScreen({
+  onSend,
+  isStreaming,
+  disabled,
+  inputNotice,
+}: WelcomeScreenProps) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Logo size="lg" className="mb-2" />
-      </motion.div>
-      <motion.p 
-        className="text-text-secondary mb-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
-        AI 新闻分析助手，为您提供专业洞察
-      </motion.p>
+    <div className="relative flex flex-1 items-center justify-center overflow-hidden px-4 pb-[12vh] pt-10 sm:px-6">
+      <div
+        className="pointer-events-none absolute left-1/2 top-[46%] h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-primary/[0.055] blur-[100px]"
+        aria-hidden="true"
+      />
 
-      <motion.div 
-        className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-4"
-        initial="hidden"
-        animate="visible"
-        variants={{
-          hidden: { opacity: 0 },
-          visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.3 } },
-        }}
+      <motion.div
+        className="relative w-full max-w-[720px]"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
-        {examples.map((category) => (
-          <motion.div
-            key={category.category}
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 },
-            }}
-            whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            className="p-4 rounded-xl border border-border-default bg-bg-secondary hover:border-border-hover hover:shadow-lg transition-shadow"
-          >
-            <div className="flex items-center gap-2 mb-3 text-text-primary">
-              <span className="text-brand-primary">
-                {categoryIcons[category.category] || <FileText className="w-5 h-5" />}
-              </span>
-              <span className="font-medium">{category.category}</span>
-            </div>
-            <div className="space-y-2">
-              {category.prompts.slice(0, 2).map((prompt, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => onSelectPrompt(prompt)}
-                  className="w-full text-left px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-tertiary hover:text-text-primary transition-colors"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        ))}
+        <div className="mb-8 text-center sm:mb-10">
+          <h1 className="text-balance text-[32px] font-medium tracking-[-0.035em] text-text-primary sm:text-[42px]">
+            读懂新闻联播里的信号
+          </h1>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-text-tertiary sm:text-[15px]">
+            从 2016 年至今的原始文稿中检索事实、比较措辞与观察趋势
+          </p>
+        </div>
+
+        <ChatInput
+          onSend={onSend}
+          disabled={disabled}
+          isStreaming={isStreaming}
+          variant="hero"
+          autoFocus
+        />
+
+        {inputNotice}
+
+        <p className="mt-3 text-center text-[11px] tracking-wide text-[#4e5159]">
+          回答附原文依据 · 重要决策请交叉核验
+        </p>
       </motion.div>
     </div>
   );

@@ -7,7 +7,7 @@ import { z } from "zod/v4";
 import { Button, Input, Card } from "@/components/ui";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
-import { User, Lock, Coins, ArrowLeft, Gift, CheckCircle, Users, Copy, ExternalLink } from "lucide-react";
+import { User, Lock, Coins, ArrowLeft, ArrowUpRight, Gift, CheckCircle, Users, Copy } from "lucide-react";
 import Link from "next/link";
 import type { MyInviteCode, InviteStats } from "@/types";
 
@@ -17,7 +17,7 @@ const profileSchema = z.object({
 
 const passwordSchema = z.object({
   old_password: z.string().min(1, "请输入原密码"),
-  new_password: z.string().min(6, "新密码至少6位"),
+  new_password: z.string().min(8, "新密码至少8位"),
   confirm_password: z.string(),
 }).refine((data) => data.new_password === data.confirm_password, {
   message: "两次密码不一致",
@@ -167,7 +167,7 @@ export default function SettingsPage() {
             <div>
               <h2 className="font-medium">积分余额</h2>
               <p className="text-sm text-text-tertiary">
-                今日已用: {credits?.daily_used || 0} / {credits?.daily_limit || 100}
+                今日已用: {credits?.daily_used || 0} / {credits?.daily_limit || 2000}
               </p>
             </div>
             <div className="ml-auto text-right">
@@ -205,6 +205,15 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </div>
+          </div>
+          <div className="mt-4 border-t border-border-default pt-4">
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-1.5 text-sm text-text-secondary transition-colors hover:text-text-primary"
+            >
+              查看积分方案
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </Card>
 

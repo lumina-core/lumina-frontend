@@ -1,5 +1,7 @@
 import { Mail, MessageCircle, type LucideIcon } from "lucide-react";
 
+export const CONTACT_EMAIL = "lumina_dev@163.com";
+
 export type ContactType = "link" | "qrcode";
 
 export interface ContactChannel {
@@ -24,7 +26,7 @@ export const CONTACT_CHANNELS: ContactChannel[] = [
     name: "邮箱",
     type: "link",
     icon: Mail,
-    value: "mailto:lumina_dev@163.com",
+    value: `mailto:${CONTACT_EMAIL}`,
   },
   {
     id: "qq",

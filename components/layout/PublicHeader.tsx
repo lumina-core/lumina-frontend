@@ -10,10 +10,7 @@ import { User, Settings, LogOut, MessageSquare, ChevronDown } from "lucide-react
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/examples", label: "使用示例" },
-  { href: "/pricing", label: "产品套餐" },
-  { href: "/docs", label: "文档" },
-  { href: "/changelog", label: "更新日志" },
+  { href: "/chat", label: "开始分析" },
   { href: "/about", label: "关于" },
 ];
 
@@ -122,14 +119,12 @@ export function PublicHeader() {
               )}
             </div>
           ) : (
-            <>
-              <Link href="/login">
-                <Button variant="ghost">登录</Button>
-              </Link>
-              <Link href="/register">
-                <Button>免费注册</Button>
-              </Link>
-            </>
+            <Link href="/chat">
+              <Button>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                直接体验
+              </Button>
+            </Link>
           )}
         </div>
       </div>

@@ -4,11 +4,16 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 
-const publicPaths = ["/", "/login", "/register", "/examples", "/pricing", "/docs", "/changelog", "/about", "/chat"];
+const publicPaths = new Set(["/login", "/register", "/pricing"]);
+
+function isPublicPath(pathname: string) {
+  return publicPaths.has(pathname) || pathname.startsWith("/share/");
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const publicPath = isPublicPath(pathname);
   const { isLoading, isAuthenticated, fetchUser, fetchCredits } = useAuthStore();
 
   useEffect(() => {
@@ -24,14 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
 
-    const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
-
-    if (!isAuthenticated && !isPublicPath) {
-      router.push("/login");
+    if (!isAuthenticated && !publicPath) {
+      router.replace("/login");
     }
-  }, [isLoading, isAuthenticated, pathname, router]);
+  }, [isLoading, isAuthenticated, publicPath, router]);
 
-  if (isLoading) {
+  if (!publicPath && (isLoading || !isAuthenticated)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-primary">
         <div className="flex flex-col items-center gap-4">

@@ -1,87 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lumina
 
-## Getting Started
+Lumina 是一个面向央视《新闻联播》全文库的中文分析 Agent。它会先检索 2016 年至今的原始文稿，再回答报道频次、措辞变化、政策信号和时间趋势，并尽量给出可点击的央视原文。
 
-### 开发环境
+线上地址：<https://lumina-news-agent.vercel.app>
+
+## 当前架构
+
+```text
+浏览器
+  → Vercel / Next.js（界面 + Agent API）
+  → OpenRouter / openai/gpt-5.6-luna
+  → HTTPS + API Key
+  → 阿里云 ECS / data-hub（新闻数据与查询）
+```
+
+- Vercel 只承载前端和 Agent 编排，不保存新闻数据。
+- 新闻数据库、全文检索和 API Key 校验留在 data-hub 服务器。
+- Agent 直接使用带有效证书的 HTTPS 域名回源，不通过裸公网 IP 传递密钥。
+- 旧 FastAPI 产品后端不在当前上线链路内；登录、积分和持久化历史仍作为可选旧功能保留。
+- 未登录用户可直接体验，当前对话保存在浏览器内存中，刷新后不会持久化。
+
+## 本地开发
+
+要求 Node.js 20+、pnpm 10+。
 
 ```bash
+cp .env.example .env.local
+pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+必须配置：
 
-### 生产环境部署
+```dotenv
+DATA_HUB_API_KEY=
+DATA_HUB_URL=https://www.lumina-core.cn
+OPENROUTER_API_KEY=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_MODEL=openai/gpt-5.6-luna
+APP_URL=http://localhost:3000
+```
+
+`BACKEND_URL` 仅用于连接旧 FastAPI 的登录、历史和积分接口。访客版 Agent 不需要它。
+
+## 质量检查
 
 ```bash
-# 1. 安装依赖
-pnpm install
-
-# 2. 构建生产版本
+pnpm exec tsc --noEmit
+pnpm lint
 pnpm build
-
-# 3. 启动生产服务器（默认端口 3000）
-pnpm start
-
-# 或指定端口
-PORT=8080 pnpm start
-
-# 后台运行（使用 nohup）
-nohup pnpm start > lumina.log 2>&1 &
-
-# 后台运行并指定端口
-nohup sh -c 'PORT=8080 pnpm start' > lumina.log 2>&1 &
-
-# 查看后台进程
-ps aux | grep next
-
-# 停止后台进程
-# 方法 1: 使用 ss 查找并 kill（推荐）
-ss -tlnp | grep 3000
-# 输出类似: LISTEN 0 511 *:3000 *:* users:(("node",pid=12345,fd=18))
-# 找到 pid 值（如 12345），然后执行:
-kill <PID>  # 例如: kill 12345
-
-# 方法 2: 使用 fuser 一步搞定
-fuser -k 3000/tcp
-
-# 方法 3: 使用 lsof（可能需要 sudo）
-kill $(lsof -t -i:3000)
 ```
 
-**使用 PM2 进行进程管理（推荐生产环境）：**
+也可以直接验证流式 Agent：
 
 ```bash
-# 安装 PM2
-npm install -g pm2
-
-# 启动服务
-pm2 start npm --name "lumina-frontend" -- start
-
-# 或指定端口
-pm2 start npm --name "lumina-frontend" -- start -- -p 8080
-
-# 常用命令
-pm2 list          # 查看进程列表
-pm2 logs          # 查看日志
-pm2 restart all   # 重启所有服务
-pm2 stop all      # 停止所有服务
+curl --no-buffer http://localhost:3000/api/chat/stream \
+  -H 'Content-Type: application/json' \
+  --data-binary '{"query":"过去几年《新闻联播》如何报道低空经济？","chat_history":[]}'
 ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Vercel 部署
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+项目使用 `vercel.json` 固定 Next.js 框架和 Agent 函数时限。首次部署前，在 Vercel 的 Production 与 Preview 环境中配置上面的六个变量，然后执行：
 
-## Learn More
+```bash
+vercel deploy
+vercel deploy --prod
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+生产拓扑、回源说明与验收记录见 [docs/deployment.md](docs/deployment.md)。

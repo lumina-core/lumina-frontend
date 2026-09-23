@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type { User, UserCredits } from "@/types";
 import { api } from "@/lib/api";
-import { removeToken, setToken, getToken } from "@/lib/auth";
 
 interface AuthState {
   user: User | null;
@@ -10,7 +9,7 @@ interface AuthState {
   isAuthenticated: boolean;
 
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
   fetchCredits: () => Promise<void>;
   setUser: (user: User | null) => void;
@@ -25,26 +24,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (email, password) => {
     const res = await api.login(email, password);
-    setToken(res.access_token);
     set({ user: res.user, isAuthenticated: true });
   },
 
-  logout: () => {
-    removeToken();
+  logout: async () => {
+    await api.logout().catch(() => undefined);
     set({ user: null, credits: null, isAuthenticated: false });
   },
 
   fetchUser: async () => {
-    const token = getToken();
-    if (!token) {
-      set({ isLoading: false, isAuthenticated: false });
-      return;
-    }
     try {
       const user = await api.getMe();
       set({ user, isAuthenticated: true, isLoading: false });
     } catch {
-      removeToken();
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },
@@ -58,7 +50,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setUser: (user) =>
+    set({
+      user,
+      isAuthenticated: !!user,
+      ...(!user ? { credits: null } : {}),
+    }),
 
   updateCredits: (credits) => {
     const current = get().credits;

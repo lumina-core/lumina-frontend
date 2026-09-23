@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback } from "react";
-import { api } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { api, ApiError } from "@/lib/api";
 import { useChatStore } from "@/stores/chatStore";
 import { useAuthStore } from "@/stores/authStore";
 import type { SSEEvent, Message, ChatSession, ChatHistoryMessage } from "@/types";
 
 export function useChat() {
+  const router = useRouter();
   const {
     messages,
     isStreaming,
@@ -23,7 +25,13 @@ export function useChat() {
     clearMessages,
   } = useChatStore();
 
-  const { updateCredits } = useAuthStore();
+  const {
+    credits,
+    updateCredits,
+    isAuthenticated,
+    fetchCredits,
+    setUser,
+  } = useAuthStore();
 
   const getHistoryContent = (msgs: Message[]) => {
     return msgs.map((m) => {
@@ -83,11 +91,18 @@ export function useChat() {
 
   const sendMessage = useCallback(
     async (query: string) => {
-      if (isStreaming || !query.trim()) return;
+      if (
+        isStreaming ||
+        !query.trim() ||
+        !isAuthenticated ||
+        !credits?.can_use
+      ) {
+        return;
+      }
 
       // 如果是新对话，先创建会话
       let session = currentSession;
-      if (!session) {
+      if (!session && isAuthenticated) {
         try {
           // 用用户输入的前50个字符作为标题
           const title = query.slice(0, 50) + (query.length > 50 ? "..." : "");
@@ -141,8 +156,8 @@ export function useChat() {
               setLastUsage({
                 input_tokens: e.input_tokens || 0,
                 output_tokens: e.output_tokens || 0,
-                credits_deducted: e.credits_deducted || 0,
-                credits_remaining: e.credits_remaining ?? 0,
+                credits_deducted: e.credits_deducted,
+                credits_remaining: e.credits_remaining,
               });
               if (typeof e.credits_remaining === "number") {
                 updateCredits(e.credits_remaining);
@@ -162,6 +177,14 @@ export function useChat() {
           api.addChatMessage(session.id, "assistant", assistantResponse).catch(console.error);
         }
       } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          setUser(null);
+          router.replace("/login");
+          return;
+        }
+        if (error instanceof ApiError && error.status === 402) {
+          await fetchCredits();
+        }
         const errorMessage = error instanceof Error ? error.message : "发送失败";
         appendTextToLastAssistant(`抱歉，发生了错误：${errorMessage}`);
       } finally {
@@ -172,6 +195,8 @@ export function useChat() {
       messages,
       isStreaming,
       currentSession,
+      isAuthenticated,
+      credits,
       createSession,
       addMessage,
       appendTextToLastAssistant,
@@ -180,6 +205,9 @@ export function useChat() {
       setIsStreaming,
       setLastUsage,
       updateCredits,
+      fetchCredits,
+      setUser,
+      router,
     ]
   );
 

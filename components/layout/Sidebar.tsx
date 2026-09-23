@@ -17,6 +17,8 @@ import {
   User,
   Home,
   History,
+  LayoutGrid,
+  Database,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +29,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, credits, logout } = useAuthStore();
+  const { user, credits, isAuthenticated, logout } = useAuthStore();
   const { clearMessages } = useChatStore();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -38,8 +40,8 @@ export function Sidebar({ className }: SidebarProps) {
     setIsMobileOpen(false);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push("/login");
   };
 
@@ -73,22 +75,47 @@ export function Sidebar({ className }: SidebarProps) {
             首页
           </Button>
         </Link>
-        <Link href="/history" onClick={() => setIsMobileOpen(false)}>
+        {isAuthenticated && (
+          <Link href="/history" onClick={() => setIsMobileOpen(false)}>
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2 text-text-secondary hover:text-text-primary",
+                pathname === "/history" && "bg-bg-tertiary text-text-primary"
+              )}
+            >
+              <History className="w-4 h-4" />
+              历史记录
+            </Button>
+          </Link>
+        )}
+        <Link href="/cards" onClick={() => setIsMobileOpen(false)}>
           <Button
             variant="ghost"
             className={cn(
               "w-full justify-start gap-2 text-text-secondary hover:text-text-primary",
-              pathname === "/history" && "bg-bg-tertiary text-text-primary"
+              pathname === "/cards" && "bg-bg-tertiary text-text-primary"
             )}
           >
-            <History className="w-4 h-4" />
-            历史记录
+            <LayoutGrid className="w-4 h-4" />
+            内容卡片
           </Button>
         </Link>
       </nav>
 
       {/* User Section */}
       <div className="p-4 border-t border-border-default space-y-2">
+        {!isAuthenticated && (
+          <div className="rounded-xl border border-border-default bg-bg-tertiary p-3">
+            <div className="flex items-center gap-2 text-sm text-text-primary">
+              <Database className="w-4 h-4 text-brand-primary" />
+              访客体验
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-text-tertiary">
+              数据来自 2016 年至今的央视《新闻联播》文稿
+            </p>
+          </div>
+        )}
         {/* Credits Display */}
         {credits && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-bg-tertiary">
@@ -101,7 +128,7 @@ export function Sidebar({ className }: SidebarProps) {
         )}
 
         {/* User Info */}
-        <div className="flex items-center gap-3 px-3 py-2">
+        {isAuthenticated && <div className="flex items-center gap-3 px-3 py-2">
           <div className="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center">
             <User className="w-4 h-4 text-brand-primary" />
           </div>
@@ -111,10 +138,10 @@ export function Sidebar({ className }: SidebarProps) {
             </p>
             <p className="text-xs text-text-tertiary truncate">{user?.email}</p>
           </div>
-        </div>
+        </div>}
 
         {/* Action Buttons */}
-        <div className="flex gap-2">
+        {isAuthenticated && <div className="flex gap-2">
           <Link href="/settings" className="flex-1" onClick={() => setIsMobileOpen(false)}>
             <Button
               variant="ghost"
@@ -130,7 +157,7 @@ export function Sidebar({ className }: SidebarProps) {
           <Button variant="ghost" onClick={handleLogout} className="px-3">
             <LogOut className="w-4 h-4" />
           </Button>
-        </div>
+        </div>}
       </div>
     </>
   );

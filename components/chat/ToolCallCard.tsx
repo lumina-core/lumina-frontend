@@ -11,6 +11,8 @@ interface ToolCallCardProps {
 const toolNames: Record<string, string> = {
   search_news_tool: "搜索新闻",
   search_news: "搜索新闻",
+  searchNews: "检索《新闻联播》",
+  getNewsArticle: "读取新闻原文",
 };
 
 export function ToolCallCard({ aggregatedToolCall }: ToolCallCardProps) {

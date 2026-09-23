@@ -1,39 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
   title: {
-    default: "Lumina - AI 新闻分析助手",
+    default: "Lumina - 新闻联播 Agent",
     template: "%s | Lumina",
   },
-  description: "专业的 AI 新闻分析助手，帮助投资者、研究员、企业决策者从海量新闻中快速获取洞察。",
-  keywords: ["AI", "新闻分析", "投资", "研究", "智能助手", "Lumina"],
+  description: "从 2016 年至今的《新闻联播》原始文稿中检索事实、比较措辞与观察趋势。",
+  keywords: ["AI", "新闻联播", "政策分析", "新闻检索", "Lumina"],
   authors: [{ name: "Lumina Team" }],
   creator: "Lumina",
   openGraph: {
     type: "website",
     locale: "zh_CN",
     siteName: "Lumina",
-    title: "Lumina - AI 新闻分析助手",
-    description: "专业的 AI 新闻分析助手，帮助投资者、研究员、企业决策者从海量新闻中快速获取洞察。",
+    title: "Lumina - 新闻联播 Agent",
+    description: "从《新闻联播》原始文稿中检索事实、比较措辞与观察趋势。",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lumina - AI 新闻分析助手",
-    description: "专业的 AI 新闻分析助手，帮助投资者、研究员、企业决策者从海量新闻中快速获取洞察。",
+    title: "Lumina - 新闻联播 Agent",
+    description: "从《新闻联播》原始文稿中检索事实、比较措辞与观察趋势。",
   },
   robots: {
     index: true,
@@ -48,10 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning
-      >
+      <body className="antialiased" suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>{children}</AuthProvider>
         </QueryProvider>

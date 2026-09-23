@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function DocsPage() {
+export default function CardsPage() {
   redirect("/chat");
 }
