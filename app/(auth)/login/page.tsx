@@ -7,7 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { Logo } from "@/components/Logo";
-import { Button, Input } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/authStore";
 
 const loginSchema = z.object({
@@ -19,7 +20,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -72,9 +73,18 @@ export default function LoginPage() {
           />
         </label>
 
-        <label className="block">
-          <span className="mb-2 block text-xs font-medium text-text-secondary">密码</span>
+        <div>
+          <div className="mb-2 flex items-center justify-between text-xs font-medium text-text-secondary">
+            <label htmlFor="login-password">密码</label>
+            <Link
+              href="/forgot-password"
+              className="font-normal text-brand-primary transition-colors hover:text-brand-hover"
+            >
+              忘记密码？
+            </Link>
+          </div>
           <Input
+            id="login-password"
             {...register("password")}
             type="password"
             autoComplete="current-password"
@@ -82,7 +92,7 @@ export default function LoginPage() {
             className="border-border-default bg-bg-secondary"
             error={errors.password?.message}
           />
-        </label>
+        </div>
 
         <Button type="submit" className="w-full bg-text-primary text-bg-primary hover:bg-white" size="lg" isLoading={isLoading}>
           登录

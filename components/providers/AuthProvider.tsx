@@ -4,7 +4,12 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 
-const publicPaths = new Set(["/login", "/register", "/pricing"]);
+const publicPaths = new Set([
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/pricing",
+]);
 
 function isPublicPath(pathname: string) {
   return publicPaths.has(pathname) || pathname.startsWith("/share/");

@@ -67,6 +67,30 @@ class ApiClient {
     });
   }
 
+  async forgotPassword(email: string) {
+    return this.request<{ success: boolean; message: string }>(
+      "/auth/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+    );
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string) {
+    return this.request<{ success: boolean; message: string }>(
+      "/auth/reset-password",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          code,
+          new_password: newPassword,
+        }),
+      },
+    );
+  }
+
   async logout() {
     return this.request<{ success: boolean }>("/auth/logout", {
       method: "POST",
