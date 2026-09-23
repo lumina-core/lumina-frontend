@@ -1,5 +1,6 @@
 import type {
   ChatHistoryMessage,
+  ChatUsage,
   Message,
   MessagePart,
   ToolCall,
@@ -8,7 +9,17 @@ import type {
 type PersistedProcess = {
   version?: number;
   parts?: unknown;
+  usage?: unknown;
 };
+
+function parsedProcess(message: ChatHistoryMessage): PersistedProcess | null {
+  if (!message.tool_calls) return null;
+  try {
+    return JSON.parse(message.tool_calls) as PersistedProcess;
+  } catch {
+    return null;
+  }
+}
 
 function isToolCall(value: unknown): value is ToolCall {
   if (typeof value !== "object" || value === null) return false;
@@ -37,18 +48,37 @@ function isMessagePart(value: unknown): value is MessagePart {
 }
 
 export function parsePersistedParts(message: ChatHistoryMessage): MessagePart[] {
-  if (message.tool_calls) {
-    try {
-      const payload = JSON.parse(message.tool_calls) as PersistedProcess;
-      if (Array.isArray(payload.parts)) {
-        const parts = payload.parts.filter(isMessagePart);
-        if (parts.length > 0) return parts;
-      }
-    } catch {
-      // Older rows may contain provider-specific JSON. Fall back to content.
-    }
+  const payload = parsedProcess(message);
+  if (Array.isArray(payload?.parts)) {
+    const parts = payload.parts.filter(isMessagePart);
+    if (parts.length > 0) return parts;
   }
   return [{ type: "text", content: message.content }];
+}
+
+export function parsePersistedUsage(
+  message: ChatHistoryMessage | undefined,
+): ChatUsage | null {
+  if (!message) return null;
+  const usage = parsedProcess(message)?.usage;
+  if (typeof usage !== "object" || usage === null) return null;
+  const value = usage as Partial<ChatUsage>;
+  if (
+    typeof value.input_tokens !== "number" ||
+    typeof value.output_tokens !== "number"
+  ) {
+    return null;
+  }
+  return {
+    input_tokens: value.input_tokens,
+    output_tokens: value.output_tokens,
+    ...(typeof value.credits_deducted === "number"
+      ? { credits_deducted: value.credits_deducted }
+      : {}),
+    ...(typeof value.credits_remaining === "number"
+      ? { credits_remaining: value.credits_remaining }
+      : {}),
+  };
 }
 
 export function historyMessageToMessage(message: ChatHistoryMessage): Message {

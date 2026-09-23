@@ -3,7 +3,10 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import { historyMessageToMessage } from "@/lib/chat/history";
+import {
+  historyMessageToMessage,
+  parsePersistedUsage,
+} from "@/lib/chat/history";
 import { useChatStore } from "@/stores/chatStore";
 import { useAuthStore } from "@/stores/authStore";
 import type { SSEEvent, ChatSession } from "@/types";
@@ -45,6 +48,11 @@ export function useChat() {
         
         setCurrentSession(session);
         setMessages(messagesRes.items.map(historyMessageToMessage));
+        setLastUsage(
+          parsePersistedUsage(
+            messagesRes.items.findLast((message) => message.role === "assistant"),
+          ),
+        );
         
         return session;
       } catch (error) {
@@ -52,7 +60,7 @@ export function useChat() {
         throw error;
       }
     },
-    [setCurrentSession, setMessages]
+    [setCurrentSession, setLastUsage, setMessages]
   );
 
   // 创建新会话
