@@ -15,6 +15,10 @@ The old `lumina-puce-one.vercel.app` host redirects pages with HTTP 308, preserv
 
 CI checks the locked installation, tests, lint and production build. Git main deploys through Vercel, but CI and deployment outcomes must be verified independently. For staged releases use `vercel deploy --prod --skip-domain`, verify with `vercel curl`, then `vercel promote`; retain the previous deployment ID for rollback.
 
-## Search Console handoff status
+## Search Console verification and crawl status
 
-2026-10-09: the URL-prefix property was added under the existing Google account, and its HTML-tag value was checked against the deployed homepage. Browser automation then failed with `Sky Computer Use native pipe startup failed` before Verify could be confirmed. Ownership verification and sitemap submission therefore remain pending; do not report them as complete. Resume the resource, choose HTML tag → Verify, then submit `sitemap.xml` once and check Success/discovered pages. The deployed sitemap itself returns valid XML with three canonical URLs.
+2026-10-09: Search Console confirmed **Ownership auto verified**, using the HTML tag on the production homepage. Keep that tag in `app/layout.tsx`.
+
+The exact `/sitemap.xml` URL was submitted. The report currently shows **Couldn't fetch / 0 discovered pages**, including after one retry. This is not a successful sitemap read. Google's live URL Inspection test at 20:36 (Asia/Shanghai) confirmed **Crawl allowed: Yes; Page fetch: Successful** for that same URL. Independent HTTP checks returned 200, `application/xml`, three canonical URLs, and an allowing robots.txt.
+
+No site-side fetch restriction was found; the difference between the live test and sitemap report remains unresolved. Recheck the report after Google's next fetch (normally within the next few days); if it still fails, inspect the report's error details and repeat a live test before changing configuration. Do not repeatedly submit or rename the sitemap to chase a Success label. Ownership, fetchability, sitemap processing and actual indexing are separate states. See [Google's sitemap troubleshooting guidance](https://support.google.com/webmasters/answer/7451001?hl=en).
