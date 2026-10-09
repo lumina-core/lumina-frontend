@@ -17,8 +17,8 @@ test('production-only and browser privacy controls', () => {
   for (const other of ['http://lumina-news-agent.vercel.app', 'https://preview.vercel.app', 'http://localhost:3000']) assert.equal(analyticsAllowed({ origin: other }, {}), false);
 });
 test('redacts query and fragment; refuses private paths and custom events', () => {
-  assert.deepEqual(sanitizePageview({ type: 'pageview', url: origin + '/chat?email=private@example.org#secret' }), { type: 'pageview', url: origin + '/chat' });
-  for (const p of ['/chat/secret', '/share/token', '/settings', '/login', '/api/chat/stream']) assert.equal(sanitizePageview({ type: 'pageview', url: origin + p }), null);
+  assert.deepEqual(sanitizePageview({ type: 'pageview', url: origin + '/pricing?email=private@example.org#secret' }), { type: 'pageview', url: origin + '/pricing' });
+  for (const p of ['/chat', '/chat/secret', '/share/token', '/settings', '/login', '/api/chat/stream']) assert.equal(sanitizePageview({ type: 'pageview', url: origin + p }), null);
   assert.equal(sanitizePageview({ type: 'event', url: origin + '/chat' }), null);
   assert.equal(sanitizePageview({ type: 'pageview', url: 'not a url' }), null);
   assert.equal(sanitizePageview({ type: 'pageview', url: 'https://evil.example/chat' }), null);

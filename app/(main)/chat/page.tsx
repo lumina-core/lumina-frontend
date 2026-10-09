@@ -7,6 +7,6 @@ export default function ChatPage() {
 
 export const metadata: Metadata = {
   alternates: { canonical: "/chat" },
-  robots: { index: true, follow: true },
+  robots: { index: false, follow: false },
   openGraph: { url: "/chat", title: "Lumina - 新闻联播 Agent" },
 };

@@ -2,13 +2,14 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { PUBLIC_PATHS } from "@/lib/site";
 import { useAuthStore } from "@/stores/authStore";
 
 const publicPaths = new Set([
   "/login",
   "/register",
   "/forgot-password",
-  "/pricing",
+  ...PUBLIC_PATHS,
 ]);
 
 function isPublicPath(pathname: string) {
