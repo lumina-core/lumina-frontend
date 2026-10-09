@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next";
+import { PrivacyAnalytics } from "@/components/PrivacyAnalytics";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://lumina-news-agent.vercel.app"),
+  verification: { google: "oRful_sYpY7YjApxwjoJMXQQbFEZFEqeQG7a9V4vMcQ" },
   title: {
     default: "Lumina - 新闻联播 Agent",
     template: "%s | Lumina",
@@ -26,8 +28,8 @@ export const metadata: Metadata = {
     description: "从《新闻联播》原始文稿中检索事实、比较措辞与观察趋势。",
   },
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
   },
 };
 
@@ -42,7 +44,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>{children}</AuthProvider>
         </QueryProvider>
-        <Analytics />
+        <PrivacyAnalytics />
       </body>
     </html>
   );

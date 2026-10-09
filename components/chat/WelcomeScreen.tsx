@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { ChatInput } from "@/components/chat/ChatInput";
@@ -53,7 +54,7 @@ export function WelcomeScreen({
         {inputNotice}
 
         <p className="mt-3 text-center text-[11px] tracking-wide text-[#4e5159]">
-          回答附原文依据 · 重要决策请交叉核验
+          回答附原文依据 · 重要决策请交叉核验 · <Link href="/privacy" className="underline">隐私说明</Link>
         </p>
       </motion.div>
     </div>

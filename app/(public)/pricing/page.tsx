@@ -6,6 +6,10 @@ import { CONTACT_EMAIL } from "@/constants/contact";
 import { CREDIT_PACKAGES } from "@/lib/billing/pricing";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/pricing" },
+  robots: { index: true, follow: true },
+  openGraph: { url: "/pricing", title: "积分方案" },
+
   title: "积分方案",
   description: "Lumina 按实际 token 消耗结算积分，查看积分方案与计费方式。",
 };
