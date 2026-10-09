@@ -14,3 +14,7 @@ The official SDK is version-pinned. The project analytics switch remains enabled
 The old `lumina-puce-one.vercel.app` host redirects pages with HTTP 308, preserving path and query. `/api` compatibility stays on the original host to avoid cross-origin credential loss. Sessions are host-only; someone using an old bookmark may need to log in once on the primary host. No account migration or backend changes are required.
 
 CI checks the locked installation, tests, lint and production build. Git main deploys through Vercel, but CI and deployment outcomes must be verified independently. For staged releases use `vercel deploy --prod --skip-domain`, verify with `vercel curl`, then `vercel promote`; retain the previous deployment ID for rollback.
+
+## Search Console handoff status
+
+2026-10-09: the URL-prefix property was added under the existing Google account, and its HTML-tag value was checked against the deployed homepage. Browser automation then failed with `Sky Computer Use native pipe startup failed` before Verify could be confirmed. Ownership verification and sitemap submission therefore remain pending; do not report them as complete. Resume the resource, choose HTML tag → Verify, then submit `sitemap.xml` once and check Success/discovered pages. The deployed sitemap itself returns valid XML with three canonical URLs.
