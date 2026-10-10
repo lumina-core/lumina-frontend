@@ -19,3 +19,15 @@ jobs:
       - run: pnpm test
       - run: pnpm lint
       - run: pnpm build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          BACKEND_URL: ""
+          LUMINA_CONTROL_URL: http://127.0.0.1:9
+          DATA_HUB_URL: http://127.0.0.1:9
+          OPENROUTER_BASE_URL: http://127.0.0.1:9
+      - run: pnpm exec tsc --noEmit
+      - name: Install pinned browser for public-route smoke tests
+        run: |
+          mkdir -p .cache/playwright
+          TMPDIR="$PWD/.cache/playwright" pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
