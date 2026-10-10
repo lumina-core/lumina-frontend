@@ -10,7 +10,7 @@ export function sanitizePageview(event: Visit): Visit | null {
   if (event.type !== "pageview") return null;
   try {
     const url = new URL(event.url);
-    if (url.origin !== ORIGIN || !(publicPaths.has(url.pathname))) return null;
+    if (url.origin !== ORIGIN || url.username || url.password || !(publicPaths.has(url.pathname))) return null;
     url.search = "";
     url.hash = "";
     return { type: "pageview", url: url.href };

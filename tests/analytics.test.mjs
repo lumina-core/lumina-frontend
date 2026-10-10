@@ -1,15 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
-import ts from 'typescript';
-function load(file) {
-  const exports = {};
-  const js = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
-  new Function('exports', 'require', js)(exports, name => load(path.resolve(path.dirname(file), name + '.ts')));
-  return exports;
-}
-const { analyticsAllowed, sanitizePageview } = load(path.resolve('lib/analytics-policy.ts'));
+import { loadTs } from './load-ts.mjs';
+const { analyticsAllowed, sanitizePageview } = loadTs('lib/analytics-policy.ts');
 const origin = 'https://lumina-news-agent.vercel.app';
 test('production-only and browser privacy controls', () => {
   assert.equal(analyticsAllowed({ origin }, {}), true);
@@ -22,4 +14,27 @@ test('redacts query and fragment; refuses private paths and custom events', () =
   assert.equal(sanitizePageview({ type: 'event', url: origin + '/chat' }), null);
   assert.equal(sanitizePageview({ type: 'pageview', url: 'not a url' }), null);
   assert.equal(sanitizePageview({ type: 'pageview', url: 'https://evil.example/chat' }), null);
+});
+
+test('rejects credential-bearing URLs instead of leaking URL userinfo', () => {
+  for (const credentials of ['fixture-user@', 'fixture-user:fixture-password@']) {
+    assert.equal(sanitizePageview({ type: 'pageview', url: `https://${credentials}lumina-news-agent.vercel.app/` }), null);
+  }
+});
+
+test('refuses dynamic, near-match, malformed and non-production pageviews', () => {
+  for (const url of [
+    ...['/chat', '/chat/00000000-0000-4000-8000-000000000000', '/history', '/cards', '/settings', '/share/fixture',
+      '/login', '/register', '/forgot-password', '/api/v1/auth/me', '/about', '/docs', '/examples', '/changelog',
+      '/pricing/', '/pricing-extra', '/privacy/child', '/Privacy', '/%70ricing', '//pricing', '/%2f'].map(path => origin + path),
+    'not a url', '/', 'https://', 'https://[invalid]/',
+    'http://lumina-news-agent.vercel.app/', 'https://lumina-news-agent.vercel.app.evil.example/',
+    'https://lumina-news-agent.vercel.app:444/', 'https://preview.vercel.app/', 'http://127.0.0.1:3100/',
+  ]) assert.equal(sanitizePageview({ type: 'pageview', url }), null, url);
+  for (const path of ['/', '/pricing', '/privacy']) {
+    assert.equal(sanitizePageview({ type: 'event', url: origin + path }), null);
+    assert.deepEqual(sanitizePageview({ type: 'pageview', url: origin + path + '?q=fixture#fixture', email: 'fixture@example.org' }), {
+      type: 'pageview', url: origin + path,
+    });
+  }
 });
