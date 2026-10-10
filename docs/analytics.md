@@ -5,7 +5,7 @@ Analytics: https://vercel.com/shanes-projects-025e82ba/lumina-news-agent/analyti
 Search Console URL-prefix: https://lumina-news-agent.vercel.app/
 Sitemap: https://lumina-news-agent.vercel.app/sitemap.xml
 
-## Implementation in this branch (not deployed)
+## Public-page implementation
 
 `/` is a public, server-rendered Chinese and English product homepage, including when authentication is pending, fails or succeeds. Both languages share one canonical URL; there are no locale routes, query locales or hreflang variants. The English introduction does not imply an English chat interface. `/`, `/pricing` and `/privacy` are the only indexable pages, sitemap entries and allowed analytics paths. They share the exact allowlist in `lib/site.ts`; the sitemap has no invented last-modified dates.
 
@@ -23,7 +23,7 @@ Local verification on 2026-10-10: 9/9 node tests and 17/17 browser tests passed 
 
 The test suite covers the exact allowlist, rendered bilingual copy, canonical/robots metadata, public navigation and analytics redaction. Playwright runs against a loopback production build with explicit browser fixtures for anonymous, delayed, failed and signed-in auth, plus a bearer-share fixture. It checks no-JS SSR, hydration, private redirects, noindex headers, 320px overflow, touch targets and keyboard navigation. Fixtures exercise UI boundaries, not live authentication, billing or model quality. See the [README](../README.md) for isolated local commands.
 
-CI is configured to install locked dependencies, run unit tests, lint, build, type-check and execute Chromium browser tests on PRs without secrets. Remote CI and deployments are not verified by a local run. This branch has not been deployed, submitted to Google or measured for visitor growth.
+CI is configured to install locked dependencies, run unit tests, lint, build, type-check and execute Chromium browser tests on PRs without secrets. Remote CI and deployments must be checked independently in GitHub and Vercel. A homepage release does not establish Google indexing or visitor growth; no new manual Google submission is implied by this change.
 
 After an intentionally authorized merge/deployment:
 

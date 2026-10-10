@@ -2,7 +2,7 @@
 
 Lumina 是面向央视《新闻联播》中文文稿库的分析 Agent。它检索 2016 年起的文稿，按关键词、短语和日期查找报道，按年/月/日比较报道频次，并结合日期与原文链接核验分析依据。档案覆盖、搜索词和 AI 回答都有局限；报道频次不等于现实变化。
 
-主域名：<https://lumina-news-agent.vercel.app>。本分支实现公开中英双语首页，尚未发布；本地验证不代表部署、Google 收录或增长。搜索与统计状态见 [docs/analytics.md](docs/analytics.md)。
+主域名：<https://lumina-news-agent.vercel.app>。首页提供公开中英双语产品介绍；实际发布版本以 GitHub 与 Vercel 部署记录为准，页面可访问不代表 Google 已收录或流量增长。搜索与统计说明见 [docs/analytics.md](docs/analytics.md)。
 
 ## 公开页面与访问边界
 
