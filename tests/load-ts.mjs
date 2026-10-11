@@ -5,7 +5,7 @@ import ts from 'typescript';
 
 // Small CommonJS loader for the repo's node:test suite. Packages use Node's real
 // resolver; only local TS/TSX modules and the app's @/ alias are transpiled.
-export function loadTs(filename, cache = new Map()) {
+export function loadTs(filename, cache = new Map(), externalOverrides = {}) {
   const file = path.resolve(filename);
   if (cache.has(file)) return cache.get(file).exports;
   const loadedModule = { exports: {} };
@@ -21,6 +21,7 @@ export function loadTs(filename, cache = new Map()) {
     },
   }).outputText;
   new Function('module', 'exports', 'require', js)(loadedModule, loadedModule.exports, name => {
+    if (Object.hasOwn(externalOverrides, name)) return externalOverrides[name];
     if (!name.startsWith('.') && !name.startsWith('@/')) return require(name);
     const base = name.startsWith('@/')
       ? path.resolve(name.slice(2))
@@ -28,7 +29,7 @@ export function loadTs(filename, cache = new Map()) {
     const resolved = [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`]
       .find(candidate => fs.existsSync(candidate) && fs.statSync(candidate).isFile());
     if (!resolved) throw new Error(`Cannot resolve ${name} from ${file}`);
-    return loadTs(resolved, cache);
+    return loadTs(resolved, cache, externalOverrides);
   });
   return loadedModule.exports;
 }

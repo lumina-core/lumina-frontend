@@ -26,7 +26,7 @@ export default defineConfig({
     use: { ...devices["Desktop Chrome"], channel: process.env.PLAYWRIGHT_CHANNEL || undefined },
   }],
   webServer: {
-    command: "pnpm start --hostname 127.0.0.1 --port 3100",
+    command: "node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100",
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,
     env: {

@@ -225,10 +225,15 @@ export async function POST(request: Request) {
         const message =
           error instanceof Error ? error.message : "Agent 暂时不可用";
         if (!agentCompleted) {
-          await cancelCredits(reservation.request_id, message).catch(
-            (cancelError) =>
-              console.error("Lumina credit cancellation failed", cancelError),
-          );
+          try {
+            const cancellation = await cancelCredits(reservation.request_id, message);
+            // Persist the confirmed wallet result, not the original hold. If
+            // cancellation fails, retain the hold rather than claiming a refund.
+            usage.credits_deducted = cancellation.credits_deducted;
+            usage.credits_remaining = cancellation.credits_remaining;
+          } catch (cancelError) {
+            console.error("Lumina credit cancellation failed", cancelError);
+          }
         }
 
         const errorText = assistantResponse

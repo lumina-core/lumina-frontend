@@ -105,7 +105,7 @@ for (const path of ['/pricing', '/privacy']) {
 }
 
 for (const path of ['/chat', '/chat/00000000-0000-4000-8000-000000000000', '/history', '/settings', '/cards']) {
-  test(`anonymous ${path} stays noindex and redirects to login`, async ({ page, request }) => {
+  test(`anonymous ${path} stays noindex and redirects to login`, async ({ page, request }, testInfo) => {
     const response = await request.get(path);
     expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow');
     const html = await response.text();
@@ -120,7 +120,11 @@ for (const path of ['/chat', '/chat/00000000-0000-4000-8000-000000000000', '/his
     }
     await page.goto(path);
     await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole('heading', { name: '欢迎回来' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '登录', exact: true })).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
+    await expect(page.locator('script[data-sdkn], script[src*="vercel-insights"], script[src*="/insights/"]')).toHaveCount(0);
+    if (path === '/chat') await page.screenshot({ path: testInfo.outputPath('protected-chat-login.png'), fullPage: true });
   });
 }
 
