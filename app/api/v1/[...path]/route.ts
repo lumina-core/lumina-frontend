@@ -13,22 +13,40 @@ const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
+// Next has already decoded each catch-all segment. Accept only the alphabet
+// used by route names, UUID/legacy numeric IDs and URL-safe share tokens. In
+// particular, never re-decode residual '%' or let URL normalization cross scopes.
 function targetPath(parts: string[]) {
-  const [scope, ...rest] = parts;
-  const suffix = rest.length ? `/${rest.join("/")}` : "";
-  switch (scope) {
-    case "auth":
-      return `/portal${suffix}`;
-    case "credits":
-      return `/lumina/credits${suffix}`;
-    case "invites":
-      return `/lumina/invites${suffix}`;
-    case "history":
-      return `/lumina/history${suffix}`;
-    default:
-      return null;
+  if (!parts.length || parts.some((part) => !/^[A-Za-z0-9_-]+$/.test(part))) {
+    return null;
   }
+  const [scope, ...rest] = parts;
+  const prefix: Record<string, string> = {
+    auth: "/portal",
+    credits: "/lumina/credits",
+    invites: "/lumina/invites",
+    history: "/lumina/history",
+  };
+  if (!Object.hasOwn(prefix, scope)) return null;
+  const target = prefix[scope] + (rest.length ? `/${rest.join("/")}` : "");
+  const normalized = new URL(target, "http://bff.invalid").pathname;
+  return normalized === target ? normalized : null;
 }
+
+// Match the FINAL canonical upstream path, not just the first browser segment.
+// Auth intentionally excludes the private Data Hub keys/usage/admin surfaces.
+const ROUTES: [RegExp, string[]][] = [
+  [/^\/portal\/(send-code|register|login|logout|change-password|forgot-password|reset-password)$/, ["POST"]],
+  [/^\/portal\/me$/, ["GET", "HEAD", "PATCH"]],
+  [/^\/lumina\/credits\/balance$/, ["GET", "HEAD"]],
+  [/^\/lumina\/credits\/checkin$/, ["POST"]],
+  [/^\/lumina\/invites(?:\/(?:me|stats))?$/, ["GET", "HEAD"]],
+  [/^\/lumina\/history$/, ["GET", "HEAD", "POST"]],
+  [/^\/lumina\/history\/shared\/[A-Za-z0-9_-]+$/, ["GET", "HEAD"]],
+  [/^\/lumina\/history\/[A-Za-z0-9_-]+$/, ["GET", "HEAD", "PATCH", "DELETE"]],
+  [/^\/lumina\/history\/[A-Za-z0-9_-]+\/messages$/, ["GET", "HEAD", "POST"]],
+  [/^\/lumina\/history\/[A-Za-z0-9_-]+\/share$/, ["POST", "DELETE"]],
+];
 
 function sameOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -57,15 +75,20 @@ async function handler(request: NextRequest, context: RouteContext) {
   }
 
   const { path } = await context.params;
-  if (path[0] === "auth" && path[1] === "logout" && request.method === "POST") {
+  const target = targetPath(path);
+  const allowed = target && ROUTES.find(([pattern]) => pattern.test(target));
+  if (!allowed) {
+    return NextResponse.json({ detail: "接口不存在" }, { status: 404 });
+  }
+  if (!allowed[1].includes(request.method)) {
+    return NextResponse.json({ detail: "请求方法不支持" }, {
+      status: 405, headers: { Allow: allowed[1].join(", ") },
+    });
+  }
+  if (target === "/portal/logout") {
     return withClearedSession(
       NextResponse.json({ success: true, message: "已退出登录" }),
     );
-  }
-
-  const target = targetPath(path);
-  if (!target) {
-    return NextResponse.json({ detail: "接口不存在" }, { status: 404 });
   }
 
   const cookieStore = await cookies();
@@ -90,6 +113,10 @@ async function handler(request: NextRequest, context: RouteContext) {
       {
         method: request.method,
         body,
+        // Generic mutations (messages, registration, sharing) do not carry an
+        // idempotency key. An ambiguous response must not repeat their writes.
+        // Credit reserve/settle/cancel use a separate idempotent transport.
+        retry: !MUTATING_METHODS.has(request.method),
         headers: {
           ...forwardedHeaders,
           ...(sessionToken

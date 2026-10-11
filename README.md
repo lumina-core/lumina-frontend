@@ -21,13 +21,19 @@ Lumina 是面向央视《新闻联播》中文文稿库的分析 Agent。它检�
 
 新闻数据与账户记录保留在 ECS；Vercel 承载界面、BFF 与 Agent 编排。浏览器通过同源 API 访问服务。生产回源使用有效证书的 HTTPS，不通过裸公网 IP 传递密钥。旧 FastAPI 产品后端不承担当前生产认证与积分。
 
+### 开源范围与自托管限制
+
+本仓库以 [MIT](LICENSE) 提供界面、BFF 与 Agent 编排代码，**不是完整可独立自托管的服务**。现行账户/JWT、积分账本、会话存储与新闻检索依赖私有 Data Hub；它的源码、数据库、采集内容和凭据不随本仓库分发，也不会为测试而公开。旧产品后端不能替代它。
+
+无私有服务权限时可以运行公开页面和本地边界测试，但不能据此宣称注册、计费或真实模型分析可用。模型服务需单独配置并承担费用；新闻原稿和第三方依赖不因本仓库 MIT 许可而获得额外再分发授权。
+
 ## 本地开发
 
-CI 使用 Node.js 24 与锁定的 pnpm 10.28.1。
+CI 使用 Node.js 24.14.0 与锁定的 pnpm 10.28.1。先在无 `.env*` 文件的干净 checkout 中体验隔离公开页：
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm dev --hostname 127.0.0.1
+pnpm demo
 ```
 
 仓库不提供 `.env.example`。要使用完整账户和分析服务，需要自行配置私有 `.env.local`，不要提交凭据：
@@ -45,19 +51,10 @@ pnpm dev --hostname 127.0.0.1
 
 ### 无凭据的公开页演示
 
-在没有 `.env*` 文件的 checkout 中运行。临时目录置于当前工作树；控制面和模型地址指向本机关闭端口，不会调用生产服务。账户检查失败是这个演示的预期状态，公开页仍可读。
+`pnpm demo` 会构建并启动生产模式页面，HOME 和临时目录隔离在当前工作树的 `.cache/`；环境凭据不继承、控制面和模型指向本机关闭端口、Node 非回环连接被拒绝。存在 `.env*` 文件时脚本拒绝启动。账户检查失败是这个演示的预期状态，公开页仍可读。
 
 ```bash
-mkdir -p .cache/demo
-export TMPDIR="$PWD/.cache/demo"
-export NEXT_TELEMETRY_DISABLED=1
-export BACKEND_URL=''
-export LUMINA_CONTROL_URL=http://127.0.0.1:9
-export DATA_HUB_URL=http://127.0.0.1:9
-export OPENROUTER_BASE_URL=http://127.0.0.1:9
-export OPENROUTER_API_KEY='' OPENAI_API_KEY='' DATA_HUB_API_KEY='' LUMINA_INTERNAL_KEY=''
-pnpm build
-pnpm start --hostname 127.0.0.1 --port 3100
+pnpm demo
 ```
 
 打开 <http://127.0.0.1:3100/>。`/pricing`、`/privacy` 公开可读，进入分析会转至登录页。此演示不提供登录或真实分析。
@@ -65,17 +62,27 @@ pnpm start --hostname 127.0.0.1 --port 3100
 ## 质量检查
 
 ```bash
-pnpm test
-pnpm lint
-pnpm build
-pnpm exec tsc --noEmit
-pnpm exec playwright install chromium
-pnpm test:e2e
+PLAYWRIGHT_BROWSERS_PATH="$PWD/.cache/playwright-browsers" pnpm exec playwright install chromium
+pnpm verify:local
+# 或使用已安装的 Chrome，无需下载：
+PLAYWRIGHT_CHANNEL=chrome pnpm verify:local
 ```
 
-本地可用现有 Chrome：`PLAYWRIGHT_CHANNEL=chrome pnpm test:e2e`，无需下载浏览器。浏览器测试使用上一步的 production build，自动启动 loopback 服务、拦截浏览器 API 为明确的测试 fixture，并拒绝外部请求；不需要 secrets。应在无 `.env*` 文件的 checkout 中运行。浏览器临时文件默认写 `.cache/playwright`（可用 `TMPDIR` 覆盖），结果和失败 trace 在忽略的 `test-results/`。
+`verify:local` 在隔离 HOME/环境下依次运行单元测试、`test:contracts`、lint、production build、TypeScript 和生产浏览器回归，任一失败即退出。测试无需 secrets，不继承真实账户或模型凭据。结果、截图与失败 trace 位于忽略的 `test-results/`。
 
-覆盖无 JS 的双语首页和 SEO、延迟/失败/已登录认证后的首页、公共链接、匿名私有路由守卫、分享与认证 noindex、精确 sitemap、320px 布局和键盘访问。单元测试覆盖 SSR 内容、共享路径与 analytics 隐私策略。CI 对 PR 执行测试、lint、build、类型检查及 Chromium smoke；本地 Chrome 通过不能替代远程 CI 结果。
+三层证据必须分开：
+
+- **公开浏览器回归**：原首页、公共链接、无 JS/延迟认证、320px/键盘、protected 跳转、noindex/统计名单；浏览器 API 是明确的 fixture，不能证明真实登录。匿名 chat 401 另向真实本地 handler 断言。
+- **公开 BFF 契约**：`pnpm test:contracts` 调用真实 route/传输代码，只替换 Next Cookie 上下文，回源为 loopback HTTP 响应；覆盖未登录、402 短路、Cookie、跨域、非幂等写不重试、取消后的错误 usage。它不验证私有账本。
+- **维护者跨仓集成**：有私有后端 checkout 时，在后端运行 `uv sync --frozen` 后执行 `uv run --frozen python scripts/test_isolated.py --frontend /absolute/path/to/lumina-frontend`（先用本仓 `verify:local` 构建）。贯通真实生产 Next HTTP/BFF、私有账号路由、bcrypt/JWT、WAL SQLite、预约/结算/退款及消息/分享。仅种入虚构用户，模型替换为 loopback SSE；不发邮件、不读取生产库、不运行生产启动迁移。数据库和 HOME 每次新建并清理。
+
+跨仓测试不复制或公开后端，也不在公开 PR CI 下载私有库。它覆盖 401、跨账户拒绝、402、服务端 usage ID、重复结算/退款、可信历史、UUID、持久化和分享撤销。真实邮件投递、新闻检索/工具调用质量、付费模型、跨境 TLS、线上计费与真实登录仍须独立授权验收；合成 fixture 全绿不能代替这些验收。
+
+CI 必需 job 名保持 `verify`，所有 Action 固定上游完整 commit SHA，checkout 不保存 token，依赖使用 frozen lockfile。可读版本注释与 SHA 须一起核对更新。私有后端的 `lumina-contracts` job 与维护者跨仓检查是独立门禁；本地通过不代表远程 CI 已运行。
+
+## 反馈与贡献
+
+普通问题请附版本、复现步骤及合成输入；小范围 PR 请运行上述检查并说明真实服务未覆盖项。安全问题走 [私密报告入口](SECURITY.md)，不要公开用户内容或有效分享链接。无支持 SLA 或贡献合并承诺。
 
 ## 发布
 

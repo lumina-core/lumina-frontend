@@ -6,28 +6,27 @@ on:
 permissions:
   contents: read
 jobs:
+  # Keep this stable: main protection and production aliasing require "verify".
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/playwright-browsers
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          node-version: 24
+          persist-credentials: false
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+        with:
+          run_install: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
-      - run: pnpm lint
-      - run: pnpm build
-        env:
-          NEXT_TELEMETRY_DISABLED: "1"
-          BACKEND_URL: ""
-          LUMINA_CONTROL_URL: http://127.0.0.1:9
-          DATA_HUB_URL: http://127.0.0.1:9
-          OPENROUTER_BASE_URL: http://127.0.0.1:9
-      - run: pnpm exec tsc --noEmit
-      - name: Install pinned browser for public-route smoke tests
+      - name: Install pinned browser
         run: |
           mkdir -p .cache/playwright
           TMPDIR="$PWD/.cache/playwright" pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      - name: Unit, BFF contracts, lint, build, typecheck and production browser regression
+        run: pnpm verify:local
