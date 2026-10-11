@@ -7,6 +7,8 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Override default ignores of eslint-config-next.
   globalIgnores([
+    // Generated Playwright downloads and isolated HOME/temp files, not source.
+    ".cache/**",
     // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
