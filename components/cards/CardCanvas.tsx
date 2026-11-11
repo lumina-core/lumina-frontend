@@ -22,7 +22,7 @@ export const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
       background: colors.bgGradient,
       position: "relative",
       overflow: "hidden",
-      fontFamily: '"Inter", "Geist Sans", "PingFang SC", sans-serif',
+      fontFamily: "var(--font-ui)",
     };
 
     const innerStyle: React.CSSProperties = {

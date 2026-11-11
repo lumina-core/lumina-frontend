@@ -1,6 +1,30 @@
 # Lumina 部署说明
 
-最后验证：2026-09-23
+完整业务链路历史验证：2026-09-23（不代表今日业务实测）。
+
+## 局部网页发布与回退
+
+2026-11-11 核对：项目 `prj_xbpwfOOMer1BKH1AfWJatJocon2T` 属于
+`team_iplHWnEw5KErlysvZjKjfyQ5`，仓库根目录（rootDirectory=null），Node 24.x、
+Next.js；build/install/output 均为框架默认，锁文件选用 pnpm，构建执行 `pnpm build`。
+`vercel.json` 继续声明 Next.js 和 stream 函数 60 秒上限。
+
+沿用 Git → PR `verify` → 受保护 `main` → Vercel 自动发布，不绕过检查。
+当前没有额外 Vercel Deployment Checks；不要把 GitHub 分支检查写成已配置该能力。
+每次记录正式 alias 的前后 deployment ID/URL、源码 SHA 与有效 projectSettings。
+局部字体/联系变更只验证公开页和隔离 fixture，不调用生产账户、验证码或模型。
+
+本次发布前正式 alias 对应 `dpl_ARxEuGWaMNnDHwuwix5GuBU3uCpE`，
+源码 `0b6de1da0bfc3e2d88c56149459fac5eeb6777ab`，可作为本次静态变更的回退版本。
+需要回退时，在已核对 owner/project 的 CLI 上执行：
+
+```sh
+vercel rollback lumina-news-agent-d8b066a9y-shanes-projects-025e82ba.vercel.app --scope shanes-projects-025e82ba
+```
+
+回退后读回正式 alias 并检查公开页；回退不回滚外部数据库。旧构建的环境配置需
+按当时情况复核；Instant Rollback 后恢复自动域名分配应明确 promote 目标版本。
+本次交付的部署/CI/浏览器证据保存在仓库忽略目录 `.cache/release-206/`，通过任务附件交付。
 
 ## 生产拓扑
 

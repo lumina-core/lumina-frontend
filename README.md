@@ -79,4 +79,16 @@ pnpm test:e2e
 
 ## 发布
 
-本变更先通过 PR 审核，不直接修改生产部署。`main` 已关联 Vercel 生产分支，合并会触发生产构建；合并和正式发布须单独授权。发布后独立检查 CI 与部署结果，再按 [docs/analytics.md](docs/analytics.md) 验证正式域名和 Google 状态。生产拓扑及历史验收记录见 [docs/deployment.md](docs/deployment.md)。
+`main` 已关联 Vercel 生产分支，合并会触发生产构建。先通过 PR 与受保护分支要求的 `verify` 检查；合并和正式发布须在当次授权内执行。发布前记录正式域名所指向的旧 deployment；发布后核对新 deployment 的源码 SHA 和正式 alias，再检查公开页。构建成功不代表账户与分析链路已经实测。生产拓扑、发布与回退入口见 [docs/deployment.md](docs/deployment.md)。
+
+## 联系邮箱与字体
+
+产品联系邮箱唯一配置是 `constants/contact.ts` 的 `CONTACT_EMAIL`：
+`shanechang@agentmail.to`。首页双语联系、隐私页、积分方案邮件模板及
+`CONTACT_CHANNELS` 均复用此值。套餐邮件的主题/正文继续按原业务语义编码；
+点击链接不等于网站发送邮件，本站没有新增自动回复或收件计划。
+
+全站 sans/mono token 与卡片共用自托管 Maple Mono / Maple Mono CN，表单继承
+同一字族。字体来源、OFL、分包范围与重生成方法见 [public/fonts/README.md](public/fonts/README.md)。
+卡片导出等待字体加载或失败回退后再量字。更新固定文案时同步生成中文子集；
+动态新闻、人名和未收录字符由系统字体回退，不能用 UI 子集宣称覆盖全量文稿。

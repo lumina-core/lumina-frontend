@@ -1,6 +1,8 @@
 @import "tailwindcss";
+@import "./maple.css";
 
 :root {
+  --font-ui: "Maple Mono", "Maple Mono CN", "PingFang SC", "Microsoft YaHei", ui-monospace, monospace;
   /* 背景层次 */
   --bg-primary: #0c0d0f;
   --bg-secondary: #131417;
@@ -55,8 +57,8 @@
   --color-border-default: var(--border-default);
   --color-border-hover: var(--border-hover);
 
-  --font-sans: "SF Pro Display", "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: "SFMono-Regular", "JetBrains Mono", "Fira Code", Consolas, monospace;
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-ui);
 
   --radius-sm: 4px;
   --radius-md: 8px;

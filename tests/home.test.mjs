@@ -15,7 +15,7 @@ test('home server-renders a bilingual product introduction with honest access an
   for (const text of ['Xinwen Lianbo', 'Chinese', 'keywords', 'phrases', 'date', 'day, month or year', 'source links', 'Email login', 'credits', 'actual token', 'coverage frequency', 'real-world', 'Sample questions']) {
     assert.ok(html.includes(text), `Missing English product information: ${text}`);
   }
-  for (const href of ['#main', '#english', '/chat', '/pricing', '/privacy', 'mailto:lumina_dev@163.com']) {
+  for (const href of ['#main', '#english', '/chat', '/pricing', '/privacy', 'mailto:shanechang@agentmail.to']) {
     assert.ok(html.includes(`href="${href}"`), `Missing navigation: ${href}`);
   }
   assert.doesNotMatch(html, /<form|href="\/(?:chat|share)\/|href="[^\"]*\?(?:query|prompt)=/);
