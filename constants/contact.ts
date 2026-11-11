@@ -1,6 +1,6 @@
 import { Mail, MessageCircle, type LucideIcon } from "lucide-react";
 
-export const CONTACT_EMAIL = "lumina_dev@163.com";
+export const CONTACT_EMAIL = "shanechang@agentmail.to";
 
 export type ContactType = "link" | "qrcode";
 

@@ -17,6 +17,9 @@ export function CardExport({ cardRef, filename = "card" }: CardExportProps) {
 
     setExporting(true);
     try {
+      // Measure after self-hosted fonts settle, including failure fallback.
+      await document.fonts.ready;
+      if (!cardRef.current) return;
       const canvas = await html2canvas(cardRef.current, {
         scale: 3, // 高清导出
         useCORS: true,
